@@ -12,27 +12,28 @@ class CommendSender(object):
         self.port = port
         self.retry_interval = retry_interval
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.log = logger.Logger(self)
         self.connect()
 
     def __del__(self):
-        logger.info("Shuting down socket ...", self)
+        self.log.info("Shuting down socket ...")
         # self.socket.shutdown()
         self.socket.close()
 
     def connect(self, retry=3):
-        logger.info("Connecting to %s:%s ..." % (self.host, self.port), self)
+        self.log.info("Connecting to %s:%s ..." % (self.host, self.port))
 
         try:
             self.socket.connect((self.host, self.port))
-            logger.info("Control_commend port connected.", self)
+            self.log.info("Control_commend port connected.")
         except socket.error as e:
-            logger.warn("Fail to connect to S1. Error: %s" %e, self)
+            self.log.warn("Fail to connect to S1. Error: %s" %e)
             if retry > 0:
                 time.sleep(self.retry_interval)
-                logger.warn("Retrying...", self)
+                self.log.warn("Retrying...")
                 self.connect(retry-1)
             else:
-                logger.error("Failed to retry", self)
+                self.log.error("Failed to retry")
                 self.connect(3)
 
 
@@ -70,21 +71,21 @@ class CommendSender(object):
     def send_commend(self, cmd, n_retries=3):
         error, response = self.send(cmd)
         if error == 1:
-            logger.warn("Error at sending '%s': %s" %(cmd, response), self)
+            self.log.warn("Error at sending '%s': %s" %(cmd, response))
         if error == 2:
-            logger.error("Error at receving the response of '%s': %s" %(cmd, response), self)
+            self.log.error("Error at receving the response of '%s': %s" %(cmd, response))
         elif response == 'OK':
-            logger.info("'%s' recevied 'OK'" %cmd)
+            self.log.info("'%s' recevied 'OK'" %cmd)
             return True
         else:
-            logger.warn("Recieved an error when executing '%s ': %s" %(cmd, response), self)
+            self.log.warn("Recieved an error when executing '%s ': %s" %(cmd, response))
 
         if n_retries > 0:
             time.sleep(self.retry_interval)
-            logger.warn("Retrying...", self)
+            self.log.warn("Retrying...")
             self.send_commend(cmd, n_retries-1)
         else:
-            logger.error("Failed to retry", self)
+            self.log.error("Failed to retry")
             self.send_commend(cmd, 3)
 
 

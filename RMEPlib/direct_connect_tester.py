@@ -9,19 +9,20 @@ PORT = 40923        # 监听的端口 (非系统级的端口: 大于 1023)
 
 msg = ['OKadf', 'adsfadsf', 'OK']
 
+log = logger.Logger('Tester')
 i = 0
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
     s.listen()
-    logger.info('Wait for msg ...', 'tester')
+    log.info('Wait for msg ...')
     conn, addr = s.accept()
     with conn:
-        logger.info('Connected by ' + str(addr), 'tester')
+        log.info('Connected by ' + str(addr))
         while True:
             data = conn.recv(1024).decode('utf-8')
             if not data:
-                logger.info("Server closed. Exiting ...", 'tester')
+                log.info("Server closed. Exiting ...")
                 break
-            logger.info("Recevied msg: "+ data, 'tester')
+            log.info("Recevied msg: "+ data)
             conn.send(msg[i].encode('utf-8'))
             i += 1
