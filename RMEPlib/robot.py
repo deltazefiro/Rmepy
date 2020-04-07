@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-from .commend_sender import  CommendSender
-from .attr_push_receiver import  AttrPushReceiver
+from .commend_sender import CommendSender
+from .attr_push_receiver import AttrPushReceiver
 from .logger import Logger
 
-class RMEP(object):
+class Robot(object):
     def __init__(self):
         self.CommendSender = CommendSender(host='127.0.0.1')
         self.connect = self.CommendSender.connect
@@ -15,7 +15,7 @@ class RMEP(object):
         self.logger = Logger('RMEP(main)')
 
 if __name__ == "__main__":
-    r = RMEP()
+    r = Robot()
     r.connect()
     while True:
         cmd = input(">>> please input SDK cmd: ")
