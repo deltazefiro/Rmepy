@@ -3,9 +3,9 @@
 
 import socket
 import time
-import logger
 import threading
 import queue
+from . import  logger
 
 
 class AttrPushReceiver(object):

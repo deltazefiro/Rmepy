@@ -2,10 +2,10 @@
 # coding=utf-8
 
 import socket
-import logger
+from RMEPlib import logger
 
-HOST = '127.0.0.1'  # 标准的回环地址 (localhost)
-PORT = 40923        # 监听的端口 (非系统级的端口: 大于 1023)
+HOST = '127.0.0.1'
+PORT = 40923
 
 msg = ['OKadf', 'adsfadsf', 'OK']
 

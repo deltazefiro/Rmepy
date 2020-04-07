@@ -1,11 +1,7 @@
-import  collections
+import RMEPlib
 
-buf = collections.deque(maxlen = 3)
-
-buf.append(1)
-buf.append(2)
-buf.append(3)
-buf.append(4)
-
-for _ in range(3):
-    print(buf.popleft())
+rm = RMEPlib.RMEP()
+rm.connect()
+while True:
+    cmd = input("Send SDK cmd >> ")
+    rm.send_query(cmd)

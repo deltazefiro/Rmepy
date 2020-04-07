@@ -3,7 +3,7 @@
 
 import socket
 import time
-import logger
+from . import  logger
 
 
 class CommendSender(object):
@@ -13,7 +13,7 @@ class CommendSender(object):
         self.retry_interval = retry_interval
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.log = logger.Logger(self)
-        self.connect()
+        # self.connect()
 
     def __del__(self):
         self.log.info("Shuting down CommendSender ...")
