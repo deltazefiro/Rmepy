@@ -31,7 +31,7 @@ class Logger():
 
 
     def error(self, msg):
-        """Print warnings.
+        """Print errors.
 
         Args:
             msg: (str) 输出的错误信息

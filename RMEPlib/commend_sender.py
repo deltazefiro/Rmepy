@@ -7,6 +7,14 @@ from . import  logger
 
 
 class CommendSender(object):
+    """用于向s1发送控制命令
+
+    Attributes:
+        host: s1地址，正常使用192.168.1.1，测试时使用本地端口127.0.0.1
+        port: 控制命令端口40923
+        retry_interval: 发送失败重试的间隔时间
+
+    """
     def __init__(self, host='192.168.2.1', port=40923, retry_interval=1):
         self.host = host
         self.port = port
@@ -20,7 +28,18 @@ class CommendSender(object):
         # self.socket.shutdown()
         self.socket.close()
 
-    def connect(self, retry=3):
+    def connect(self, n_retries=3):
+        """Connect to s1.
+
+        连接robomaster s1
+
+        Args:
+            n_retries: (int) 重试次数
+
+        Returns:
+            None
+
+        """
         self.log.info("Connecting to %s:%s ..." % (self.host, self.port))
 
         try:
@@ -28,10 +47,10 @@ class CommendSender(object):
             self.log.info("ControlCommend port connected.")
         except socket.error as e:
             self.log.warn("Fail to connect to S1. Error: %s" % e)
-            if retry > 0:
+            if n_retries > 0:
                 time.sleep(self.retry_interval)
                 self.log.warn("Retrying...")
-                self.connect(retry-1)
+                self.connect(n_retries-1)
             else:
                 self.log.error("Failed to retry.")
                 self.connect(3)
@@ -55,6 +74,7 @@ class CommendSender(object):
         Returns:
             error_code: (int) 错误码
                 (0: 无错误，1: 发送时出错，2: 接收回应时出错)
+
         """
         try:
             self.socket.send(cmd.encode('utf-8'))
@@ -68,6 +88,19 @@ class CommendSender(object):
             return 2, e
 
     def send_commend(self, cmd, n_retries=3):
+        """Send a commend which does not require returns.
+
+        向s1发送一个不需要返回值的命令
+        即若执行成功s1只返回'OK'的命令，如 'connect' 命令
+
+        Args:
+            cmd: (str) 命令
+            n_retries: (int) 重试次数
+            
+        Returns:
+            None
+
+        """
         error, response = self.send(cmd)
         if error == 1:
             self.log.warn("Error at sending '%s': %s" % (cmd, response))
@@ -90,6 +123,19 @@ class CommendSender(object):
             self.send_commend(cmd, 3)
 
     def send_query(self, cmd, n_retries=3):
+        """Send a commend which requires returns.
+
+        向s1发送一个询问性的（需要返回值的）命令
+        即所以以'?'结尾的命令，如 'robot mode ?' 命令
+
+        Args:
+            cmd: (str) 命令
+            n_retries: (int) 重试次数
+        
+        Returns:
+            response: (str) 来自s1的返回值
+
+        """
         error, response = self.send(cmd)
         if error == 1:
             self.log.warn("Error at sending '%s': %s" % (cmd, response))
