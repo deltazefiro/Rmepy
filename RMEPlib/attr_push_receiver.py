@@ -5,17 +5,17 @@ import socket
 import time
 import threading
 import queue
-from . import  logger
+from . import logger
 
 
 class AttrPushReceiver(object):
-    def __init__(self, host='192.168.2.1', port=40924, buffer_size=5):
-        self.host = host
+    def __init__(self, robot, port=40924):
+        self.robot = robot
+        self.ip = robot.ip
         self.port = port
-        self.running = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.log = logger.Logger(self)
-        self.buffer = queue.deque(maxlen=buffer_size)
+        self.running = False
 
     def __del__(self):
         self.log.info("Shuting down AttrPushReceiver ...")
@@ -25,14 +25,14 @@ class AttrPushReceiver(object):
             self.log.info('Shutted down AttrPushReceiver thread successfully.')
         except AttributeError:
             self.log.warn(
-                'AttrPushReceiver thread has not be started. Skip ...')
+                'AttrPushReceiver thread has not been started. Skip ...')
         self.socket.close()
 
     def bind(self, retry=3):
-        self.log.info("Binding to %s:%s ..." % (self.host, self.port))
+        self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
 
         try:
-            self.socket.bind((self.host, self.port))
+            self.socket.bind((self.ip, self.port))
             self.log.info("AttrPush port bound.")
         except socket.error as e:
             self.log.warn("Fail to bind AttrPush port. Error: %s" % e)
@@ -56,7 +56,7 @@ class AttrPushReceiver(object):
         while self.running:
             try:
                 recv = self.socket.recv(1024).decode('utf-8')
-                self.buffer.appendleft()
+                self.robot.attr_buffer.appendleft()
             except socket.timeout:
                 continue
             except socket.error as e:

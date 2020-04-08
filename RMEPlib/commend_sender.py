@@ -10,17 +10,23 @@ class CommendSender(object):
     """用于向s1发送控制命令
 
     Attributes:
-        host: s1地址，正常使用192.168.1.1，测试时使用本地端口127.0.0.1
+        robot: robot对象
         port: 控制命令端口40923
         retry_interval: 发送失败重试的间隔时间
 
     """
-    def __init__(self, host='192.168.2.1', port=40923, retry_interval=1):
-        self.host = host
+    def __init__(self, robot, port=40923, retry_interval=1):
+        self.robot = robot
+        self.ip = robot.ip
         self.port = port
         self.retry_interval = retry_interval
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.log = logger.Logger(self)
+
+        # robot.send = self.send
+        # robot.send_cmd = self.send_commend
+        # robot.send_query = self.send_query
+        # robot.connect = self.connect
         # self.connect()
 
     def __del__(self):
@@ -40,10 +46,10 @@ class CommendSender(object):
             None
 
         """
-        self.log.info("Connecting to %s:%s ..." % (self.host, self.port))
+        self.log.info("Connecting to %s:%s ..." % (self.ip, self.port))
 
         try:
-            self.socket.connect((self.host, self.port))
+            self.socket.connect((self.ip, self.port))
             self.log.info("ControlCommend port connected.")
         except socket.error as e:
             self.log.warn("Fail to connect to S1. Error: %s" % e)
@@ -156,13 +162,3 @@ class CommendSender(object):
         else:
             self.log.error("Failed to retry.")
             self.send_commend(cmd, 3)
-
-
-if __name__ == "__main__":
-    sender = CommendSender(host='127.0.0.1')
-    while True:
-        cmd = input(">>> please input SDK cmd: ")
-        sender.send_query(cmd)
-
-        if cmd.upper() == 'Q':
-            break
