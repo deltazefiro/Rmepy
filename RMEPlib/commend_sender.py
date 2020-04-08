@@ -73,7 +73,7 @@ class CommendSender(object):
 
         Returns:
             error_code: (int) 错误码
-                (0: 无错误，1: 发送时出错，2: 接收回应时出错)
+                {0: 无错误，1: 发送时出错，2: 接收回应时出错}
 
         """
         try:
@@ -109,7 +109,7 @@ class CommendSender(object):
                 "Error at receiving the response of '%s': %s" % (cmd, response))
         elif response == 'OK':
             self.log.info("'%s' recevied 'OK'." % cmd)
-            return
+            return None
         else:
             self.log.warn(
                 "Received an error when executing '%s ': %s" % (cmd, response))
@@ -121,6 +121,7 @@ class CommendSender(object):
         else:
             self.log.error("Failed to retry.")
             self.send_commend(cmd, 3)
+
 
     def send_query(self, cmd, n_retries=3):
         """Send a commend which requires returns.
