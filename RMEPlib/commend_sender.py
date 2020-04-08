@@ -112,7 +112,7 @@ class CommendSender(object):
             return None
         else:
             self.log.warn(
-                "Received an error when executing '%s ': %s" % (cmd, response))
+                "Received an error when executing '%s': %s" % (cmd, response))
 
         if n_retries > 0:
             time.sleep(self.retry_interval)

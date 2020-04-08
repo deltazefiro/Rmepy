@@ -1,11 +1,11 @@
-from . import Logger
+from . import logger
 
 
 class CmdPkgTemplate(object):
     def __init__(self, robot):
         self.send_cmd = robot.send_cmd
         self.send_query = robot.send_query
-        self.log = Logger.logger('Commend')
+        self.log = logger.Logger('Commend')
 
 
 class BasicCtrl(CmdPkgTemplate):

@@ -7,7 +7,7 @@ from RMEPlib import logger
 HOST = '127.0.0.1'
 PORT = 40923
 
-msg = ['OKadf', 'adsfadsf', 'OK']
+msg = ['OKadf', 'adsfadsf', 'OK', 'adsfasd', 'adfasdfasdf']
 
 log = logger.Logger('Tester')
 i = 0
