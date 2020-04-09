@@ -23,6 +23,7 @@ class VideoStreamReceiver(object):
         self.ip = robot.ip
         self.port = self.port
         self.log = logger.Logger(self)
+        self.running = False
 
 
     def bind(self, retry=3):
@@ -47,3 +48,6 @@ class VideoStreamReceiver(object):
         self.thread = threading.Thread(target=self.update)
         self.thread.start()
         self.log.info('AttrPushReceiver thread started.')
+
+    def update(self):
+        pass
