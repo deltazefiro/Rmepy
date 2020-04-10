@@ -5,7 +5,17 @@ class CmdPkgTemplate(object):
     def __init__(self, robot):
         self.send_cmd = robot.send_cmd
         self.send_query = robot.send_query
-        self.log = logger.Logger('Commend')
+        self.log = logger.Logger('Commends')
+
+    def _process_response(self, inp, type_list):
+        inp = inp.split(' ')
+        out = []
+        if type(type_list) == list:
+            for data, f in zip(inp, type_list):
+                out.append(f(data))
+        else:
+            out = list(map(type_list, inp))
+        return out
 
 
 class BasicCtrl(CmdPkgTemplate):
@@ -72,7 +82,7 @@ class BasicCtrl(CmdPkgTemplate):
             None
 
         Returns:
-            mode (int): 机器人的运动模式
+            (int): 机器人的运动模式
                 {0:云台跟随底盘模式, 1:底盘跟随云台模式, 2:自由模式}
 
         """
@@ -98,7 +108,7 @@ class Chassis(CmdPkgTemplate):
             None
 
         """
-        return self.send_cmd('chassis speed x %f y %f z %f' %(speed_x, speed_y, speed_yaw))
+        return self.send_cmd('chassis speed x %f y %f z %f' % (speed_x, speed_y, speed_yaw))
 
     def set_wheel_speed(self, speed_w1, speed_w2, speed_w3, speed_w4):
         """底盘轮子速度控制
@@ -115,23 +125,67 @@ class Chassis(CmdPkgTemplate):
             None
 
         """
-        return self.send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' %(speed_w1, speed_w2, speed_w3, speed_w4))
+        return self.send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' % (speed_w1, speed_w2, speed_w3, speed_w4))
 
     def shift(self, x=0, y=0, yaw=0, speed_xy=0.5, speed_yaw=90):
         """底盘相对位置控制
-        
+
         控制底盘运动当指定位置，坐标轴原点为当前位置
-        
+
         Args:
             x  (float:[-5, 5]): x 轴向运动距离，单位 m
             y  (float:[-5, 5]): y 轴向运动距离，单位 m
             yaw  (int:[-1800, 1800]): z 轴向旋转角度，单位 °
             speed_xy  (float:(0, 3.5]): xy 轴向运动速度，单位 m/s
             speed_yaw  (float:(0, 600]): z 轴向旋转速度， 单位 °/s
-        
+
         Returns:
             None
+
+        """
+        return self.send_cmd('chassis move x %f y %f z %d vxy %f vz %f' % (x, y, yaw, speed_xy, speed_yaw))
+
+    def get_speed(self):
+        """底盘速度信息获取
+
+        获取底盘的速度信息
+
+        Args:
+            None
+
+        Returns:
+            (dict/list) {
+                speed_x (float): x轴向的运动速度，单位 m/s 
+                speed_y (float): y轴向的运动速度，单位 m/s
+                speed_yaw (float): z轴向的旋转速度，单位 °/s
+                speed_w1 (int): 右前麦轮速度，单位 rpm
+                speed_w2 (int): 左前麦轮速度，单位 rpm
+                speed_w3 (int): 右后麦轮速度，单位 rpm
+                speed_w4 (int): 左后麦轮速度，单位 rpm
+                }
+
+
+        """
+        response = self.send_query('chassis position ?')
+        return self._process_response(response, (float, float, float, int, int, int, int))
+
+    def get_postion(self):
+        """底盘绝对位置信息获取
+        
+        获取底盘位置信息
+        坐标原点为上电时刻机器人位置
+        
+        Args:
+            None
+        
+        Returns:
+            (dict/list) {
+                x (float): x轴向的位移
+                y (float): y轴向的位移
+                z (float): z轴向的位移
+            }
         
         """
-        return self.send_cmd('chassis move x %f y %f z %d vxy %f vz %f' %(x, y, yaw, speed_xy, speed_yaw))
+        response = self.send_query('chassis position ?')
+        return self._process_response(response, float)
     
