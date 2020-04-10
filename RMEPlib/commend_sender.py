@@ -3,7 +3,29 @@
 
 import socket
 import time
-from . import  logger
+from . import logger
+from functools import wraps
+
+
+def retry(n_retries):
+    def decorator(func):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            retry = 0
+            while retry < n_retries:
+                error, response = func(*args, **kwargs)
+                if not error:
+                    return response
+                retry += 1
+                time.sleep(args[0].retry_interval)
+                args[0].log.warn("Retrying %d ..." % retry)
+            args[0].log.error("Failed to retry.")
+            return None
+
+        return wrapper
+    return decorator
+
 
 
 class CommendSender(object):
@@ -15,6 +37,7 @@ class CommendSender(object):
         retry_interval: 发送失败重试的间隔时间
 
     """
+
     def __init__(self, robot, port=40923, retry_interval=1):
         self.robot = robot
         self.ip = robot.ip
@@ -34,16 +57,18 @@ class CommendSender(object):
         # self.socket.shutdown()
         self.socket.close()
 
-    def connect(self, n_retries=3):
+    @retry(n_retries=1e8)
+    def connect(self):
         """Connect to s1.
 
         连接robomaster s1
 
         Args:
-            n_retries: (int) 重试次数
+            None
 
         Returns:
-            None
+            error: (int) 错误码
+            None: (None) 用于适配修饰器
 
         """
         self.log.info("Connecting to %s:%s ..." % (self.ip, self.port))
@@ -51,25 +76,12 @@ class CommendSender(object):
         try:
             self.socket.connect((self.ip, self.port))
             self.log.info("ControlCommend port connected.")
+            error = 0
         except socket.error as e:
             self.log.warn("Fail to connect to S1. Error: %s" % e)
-            if n_retries > 0:
-                time.sleep(self.retry_interval)
-                self.log.warn("Retrying...")
-                self.connect(n_retries-1)
-            else:
-                self.log.error("Failed to retry.")
-                self.connect(3)
+            error = 1
 
-        # for i in range(3):
-        #     recv = self.send("command")
-        #     if recv == 'OK':
-        #         logger.info("Entered commend mode successfully.", self)
-        #         break
-        #     else:
-        #         time.sleep(self.retry_interval)
-        #         logger.warn(
-        #             "Unable to enter commend mode. Recevied: %s. Retrying %d ..." % (recv, i), self)
+        return error, None
 
     def send(self, cmd):
         """ Send a commend to S1.
@@ -93,7 +105,8 @@ class CommendSender(object):
         except socket.error as e:
             return 2, e
 
-    def send_commend(self, cmd, n_retries=3):
+    @retry(n_retries=3)
+    def send_commend(self, cmd):
         """Send a commend which does not require returns.
 
         向s1发送一个不需要返回值的命令
@@ -101,35 +114,32 @@ class CommendSender(object):
 
         Args:
             cmd: (str) 命令
-            n_retries: (int) 重试次数
-            
+
         Returns:
-            None
+            error: (int) 错误码
+            None: (None) 用于适配修饰器
 
         """
         error, response = self.send(cmd)
         if error == 1:
             self.log.warn("Error at sending '%s': %s" % (cmd, response))
-        if error == 2:
+        elif error == 2:
             self.log.error(
                 "Error at receiving the response of '%s': %s" % (cmd, response))
+        elif response == '':
+            error = 3
+            self.log.warn("Got null response of '%s'." % cmd)
         elif response == 'OK':
             self.log.info("'%s' recevied 'OK'." % cmd)
-            return None
         else:
+            error = 4
             self.log.warn(
                 "Received an error when executing '%s': %s" % (cmd, response))
 
-        if n_retries > 0:
-            time.sleep(self.retry_interval)
-            self.log.warn("Retrying...")
-            self.send_commend(cmd, n_retries-1)
-        else:
-            self.log.error("Failed to retry.")
-            self.send_commend(cmd, 3)
+        return error, None
 
-
-    def send_query(self, cmd, n_retries=3):
+    @retry(n_retries=3)
+    def send_query(self, cmd):
         """Send a commend which requires returns.
 
         向s1发送一个询问性的（需要返回值的）命令
@@ -137,9 +147,9 @@ class CommendSender(object):
 
         Args:
             cmd: (str) 命令
-            n_retries: (int) 重试次数
-        
+
         Returns:
+            error: (int) 错误码
             response: (str) 来自s1的返回值
 
         """
@@ -150,15 +160,9 @@ class CommendSender(object):
             self.log.error(
                 "Error at recevied the response of '%s': %s" % (cmd, response))
         elif response == '':
-            self.log.warn("Got null response of '%s'." %cmd)
+            error = 3
+            self.log.warn("Got null response of '%s'." % cmd)
         else:
-            self.log.info("'%s' received '%s'." %(cmd, response))
-            return response
+            self.log.info("'%s' received '%s'." % (cmd, response))
 
-        if n_retries > 0:
-            time.sleep(self.retry_interval)
-            self.log.warn("Retrying...")
-            self.send_commend(cmd, n_retries-1)
-        else:
-            self.log.error("Failed to retry.")
-            self.send_commend(cmd, 3)
+        return error, response
