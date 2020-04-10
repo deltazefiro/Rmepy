@@ -48,7 +48,7 @@ class BasicCtrl(CmdPkgTemplate):
         每种机器人模式都对应了特定的作用关系。
 
         Args:
-            mode: (enum) 机器人运动模式
+            mode (enum): 机器人运动模式
                 {0:云台跟随底盘模式, 1:底盘跟随云台模式, 2:自由模式}
 
         Returns:
@@ -72,7 +72,7 @@ class BasicCtrl(CmdPkgTemplate):
             None
 
         Returns:
-            mode: (int) 机器人的运动模式
+            mode (int): 机器人的运动模式
                 {0:云台跟随底盘模式, 1:底盘跟随云台模式, 2:自由模式}
 
         """
@@ -80,7 +80,58 @@ class BasicCtrl(CmdPkgTemplate):
         return mode_enum.index(self.send_cmd('robot mode ?'))
 
 
-
 class Chassis(CmdPkgTemplate):
     def __init__(self, robot):
         super().__init__(robot)
+
+    def set_vel(self, speed_x, speed_y, speed_yaw):
+        """底盘运动速度控制
+
+        控制底盘运动速度
+
+        Args:
+            speed_x (float:[-3.5,3.5]): x 轴向运动速度，单位 m/s
+            speed_y (float:[-3.5,3.5]): y 轴向运动速度，单位 m/s
+            speed_yaw (float:[-600,600]): z 轴向旋转速度，单位 °/s
+
+        Returns:
+            None
+
+        """
+        return self.send_cmd('chassis speed x %f y %f z %f' %(speed_x, speed_y, speed_yaw))
+
+    def set_wheel_speed(self, speed_w1, speed_w2, speed_w3, speed_w4):
+        """底盘轮子速度控制
+
+        控制四个轮子的速度
+
+        Args:
+            speed_w1 (int:[-1000, 1000]): 右前麦轮速度，单位 rpm
+            speed_w2 (int:[-1000, 1000]): 左前麦轮速度，单位 rpm
+            speed_w3 (int:[-1000, 1000]): 右后麦轮速度，单位 rpm
+            speed_w4 (int:[-1000, 1000]): 左后麦轮速度，单位 rpm
+
+        Returns:
+            None
+
+        """
+        return self.send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' %(speed_w1, speed_w2, speed_w3, speed_w4))
+
+    def shift(self, x=0, y=0, yaw=0, speed_xy=0.5, speed_yaw=90):
+        """底盘相对位置控制
+        
+        控制底盘运动当指定位置，坐标轴原点为当前位置
+        
+        Args:
+            x  (float:[-5, 5]): x 轴向运动距离，单位 m
+            y  (float:[-5, 5]): y 轴向运动距离，单位 m
+            yaw  (int:[-1800, 1800]): z 轴向旋转角度，单位 °
+            speed_xy  (float:(0, 3.5]): xy 轴向运动速度，单位 m/s
+            speed_yaw  (float:(0, 600]): z 轴向旋转速度， 单位 °/s
+        
+        Returns:
+            None
+        
+        """
+        return self.send_cmd('chassis move x %f y %f z %d vxy %f vz %f' %(x, y, yaw, speed_xy, speed_yaw))
+    
