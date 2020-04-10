@@ -21,7 +21,7 @@ class VideoStreamReceiver(object):
     def __init__(self, robot, port='40921'):
         self.robot = robot
         self.ip = robot.ip
-        self.port = self.port
+        self.port = port
         self.log = logger.Logger(self)
         self.running = False
 
