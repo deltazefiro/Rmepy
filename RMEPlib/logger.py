@@ -15,7 +15,7 @@ class Logger():
         Returns:
             None
         """
-        print("\033[36m" + "[Info]%s: %s" % (self.name, msg) + "\033[0m")
+        print("\033[0;36m" + "[Info]%s: %s" % (self.name, msg) + "\033[0m")
 
 
     def warn(self, msg):
@@ -27,7 +27,7 @@ class Logger():
         Returns:
             None
         """
-        print("\033[33m" + "[Warning]%s: %s" % (self.name, msg) + "\033[0m")
+        print("\033[0;33m" + "[Warning]%s: %s" % (self.name, msg) + "\033[0m")
 
 
     def error(self, msg):
@@ -40,11 +40,12 @@ class Logger():
             None
         """
         print("=============================================")
-        print("\033[31m" + "[Error]%s: %s" % (self.name, msg) + "\033[0m")
-        temp = input("Force to continue? (y/n) ")
+        print("\033[0;31m" + "[Error]%s: %s" % (self.name, msg) + "\033[0m")
+        temp = input("Force to continue? ('y' for continue / 'n' for print Traceback) ")
         print("=============================================")
         if temp.upper() != 'Y':
-            exit()
+            print("\033[0;31m", end='')
+            raise
 
 
 if  __name__ == '__main__':

@@ -27,4 +27,5 @@ class Robot(object):
         self.push_buffer = queue.deque(maxlen=10)
 
         self.basic_ctrl = commends.BasicCtrl(self)
+        self.chassis = commends.Chassis(self)
         self.logger = Logger('RMEP(main)')
