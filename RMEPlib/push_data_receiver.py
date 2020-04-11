@@ -8,7 +8,7 @@ import queue
 from . import logger
 
 
-class AttrPushReceiver(object):
+class PushDataReceiver(object):
     def __init__(self, robot, port=40924):
         self.robot = robot
         self.ip = robot.ip
@@ -18,14 +18,14 @@ class AttrPushReceiver(object):
         self.running = False
 
     def __del__(self):
-        self.log.info("Shuting down AttrPushReceiver ...")
+        self.log.info("Shuting down PushDataReceiver ...")
         self.running = False
         try:
             self.thread.join()
-            self.log.info('Shutted down AttrPushReceiver thread successfully.')
+            self.log.info('Shutted down PushDataReceiver thread successfully.')
         except AttributeError:
             self.log.warn(
-                'AttrPushReceiver thread has not been started. Skip ...')
+                'PushDataReceiver thread has not been started. Skip ...')
         self.socket.close()
 
     def bind(self, retry=3):
@@ -33,9 +33,9 @@ class AttrPushReceiver(object):
 
         try:
             self.socket.bind((self.ip, self.port))
-            self.log.info("AttrPush port bound.")
+            self.log.info("Push port bound.")
         except socket.error as e:
-            self.log.warn("Fail to bind AttrPush port. Error: %s" % e)
+            self.log.warn("Fail to bind Push port. Error: %s" % e)
             if retry > 0:
                 time.sleep(self.retry_interval)
                 self.log.warn("Retrying...")
@@ -49,14 +49,14 @@ class AttrPushReceiver(object):
         self.running = True
         self.thread = threading.Thread(target=self.update)
         self.thread.start()
-        self.log.info('AttrPushReceiver thread started.')
+        self.log.info('PushDataReceiver thread started.')
 
     def update(self):
         self.socket.settimeout(1)
         while self.running:
             try:
                 recv = self.socket.recv(1024).decode('utf-8')
-                self.robot.attr_buffer.appendleft()
+                self.robot.push_buffer.appendleft()
             except socket.timeout:
                 continue
             except socket.error as e:
@@ -64,7 +64,7 @@ class AttrPushReceiver(object):
 
 
 if __name__ == "__main__":
-    test = AttrPushReceiver('127.0.0.1')
+    test = PushDataReceiver('127.0.0.1')
     test.start()
     import time
     time.sleep(3)
