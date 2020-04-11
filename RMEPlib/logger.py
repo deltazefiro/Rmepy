@@ -41,7 +41,7 @@ class Logger():
         """
         print("=============================================")
         print("\033[0;31m" + "[Error]%s: %s" % (self.name, msg) + "\033[0m")
-        temp = input("Force to continue? ('y' for continue / 'n' for print Traceback) ")
+        temp = input("Force to continue? ('y' to continue / 'n' to print Traceback) ")
         print("=============================================")
         if temp.upper() != 'Y':
             print("\033[0;31m", end='')

@@ -19,8 +19,8 @@ def retry(n_retries):
                     return response
                 retry += 1
                 time.sleep(args[0].retry_interval)
-                args[0].log.warn("Retrying %d ..." % retry)
-            args[0].log.error("Failed to retry.")
+                args[0]._log.warn("Retrying %d ..." % retry)
+            args[0]._log.error("Failed to retry.")
             return None
 
         return wrapper
@@ -44,7 +44,7 @@ class CommendSender(object):
         self.port = port
         self.retry_interval = retry_interval
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.log = logger.Logger(self)
+        self._log = logger.Logger(self)
 
         # robot.send = self.send
         # robot.send_cmd = self.send_commend
@@ -53,7 +53,7 @@ class CommendSender(object):
         # self.connect()
 
     def __del__(self):
-        self.log.info("Shuting down CommendSender ...")
+        self._log.info("Shuting down CommendSender ...")
         # self.socket.shutdown()
         self.socket.close()
 
@@ -71,14 +71,14 @@ class CommendSender(object):
             None: (None) 用于适配修饰器
 
         """
-        self.log.info("Connecting to %s:%s ..." % (self.ip, self.port))
+        self._log.info("Connecting to %s:%s ..." % (self.ip, self.port))
 
         try:
             self.socket.connect((self.ip, self.port))
-            self.log.info("ControlCommend port connected.")
+            self._log.info("ControlCommend port connected.")
             error = 0
         except socket.error as e:
-            self.log.warn("Fail to connect to S1. Error: %s" % e)
+            self._log.warn("Fail to connect to S1. Error: %s" % e)
             error = 1
 
         return error, None
@@ -122,18 +122,18 @@ class CommendSender(object):
         """
         error, response = self.send(cmd)
         if error == 1:
-            self.log.warn("Error at sending '%s': %s" % (cmd, response))
+            self._log.warn("Error at sending '%s': %s" % (cmd, response))
         elif error == 2:
-            self.log.error(
+            self._log.error(
                 "Error at receiving the response of '%s': %s" % (cmd, response))
         elif response == '':
             error = 3
-            self.log.warn("Got null response of '%s'." % cmd)
+            self._log.warn("Got null response of '%s'." % cmd)
         elif response == 'OK':
-            self.log.info("'%s' recevied 'OK'." % cmd)
+            self._log.info("'%s' recevied 'OK'." % cmd)
         else:
             error = 4
-            self.log.warn(
+            self._log.warn(
                 "Received an error when executing '%s': %s" % (cmd, response))
 
         return error, None
@@ -155,14 +155,14 @@ class CommendSender(object):
         """
         error, response = self.send(cmd)
         if error == 1:
-            self.log.warn("Error at sending '%s': %s" % (cmd, response))
+            self._log.warn("Error at sending '%s': %s" % (cmd, response))
         if error == 2:
-            self.log.error(
+            self._log.error(
                 "Error at recevied the response of '%s': %s" % (cmd, response))
         elif response == '':
             error = 3
-            self.log.warn("Got null response of '%s'." % cmd)
+            self._log.warn("Got null response of '%s'." % cmd)
         else:
-            self.log.info("'%s' received '%s'." % (cmd, response))
+            self._log.info("'%s' received '%s'." % (cmd, response))
 
         return error, response
