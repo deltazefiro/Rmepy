@@ -7,15 +7,15 @@ class CmdPkgTemplate(object):
         self.send_query = robot.send_query
         self.log = logger.Logger('Commends')
 
-    def _process_response(self, inp, type_list):
-        inp = inp.split(' ')
-        out = []
+    def _process_response(self, data, type_list):
+        data = data.split(' ')
         if type(type_list) == list:
-            for data, f in zip(inp, type_list):
-                out.append(f(data))
+            data = [f(i) if f != bool else bool(int(i))
+                    for i, f in zip(data, type_list)]
         else:
-            out = list(map(type_list, inp))
-        return out
+            data = [type_list(i) if type_list != bool else bool(int(i))
+                    for i in data]
+        return data
 
 
 class BasicCtrl(CmdPkgTemplate):
@@ -145,7 +145,7 @@ class Chassis(CmdPkgTemplate):
         """
         return self.send_cmd('chassis move x %f y %f z %d vxy %f vz %f' % (x, y, yaw, speed_xy, speed_yaw))
 
-    def get_speed(self):
+    def get_all_speed(self):
         """底盘速度信息获取
 
         获取底盘的速度信息
@@ -154,7 +154,7 @@ class Chassis(CmdPkgTemplate):
             None
 
         Returns:
-            (dict/list) {
+            (list) [
                 speed_x (float): x轴向的运动速度，单位 m/s 
                 speed_y (float): y轴向的运动速度，单位 m/s
                 speed_yaw (float): z轴向的旋转速度，单位 °/s
@@ -162,30 +162,112 @@ class Chassis(CmdPkgTemplate):
                 speed_w2 (int): 左前麦轮速度，单位 rpm
                 speed_w3 (int): 右后麦轮速度，单位 rpm
                 speed_w4 (int): 左后麦轮速度，单位 rpm
-                }
+                ]
 
 
         """
         response = self.send_query('chassis position ?')
         return self._process_response(response, (float, float, float, int, int, int, int))
 
-    def get_postion(self):
-        """底盘绝对位置信息获取
-        
-        获取底盘位置信息
-        坐标原点为上电时刻机器人位置
-        
+    def get_speed(self):
+        """获取机器人运动速度
+
+        获取机器人整体的速度信息
+
         Args:
             None
-        
+
         Returns:
-            (dict/list) {
+            (list) [
+                speed_x (float): x轴向的运动速度，单位 m/s 
+                speed_y (float): y轴向的运动速度，单位 m/s
+                speed_yaw (float): z轴向的旋转速度，单位 °/s
+                ]
+
+        """
+        return self.get_all_speed(self)[:3]
+
+    def get_wheel_speed(self):
+        """获取麦轮速度
+
+        获取麦轮的速度信息
+
+        Args:
+            None
+
+        Returns:
+            (list) [
+                speed_w1 (int): 右前麦轮速度，单位 rpm
+                speed_w2 (int): 左前麦轮速度，单位 rpm
+                speed_w3 (int): 右后麦轮速度，单位 rpm
+                speed_w4 (int): 左后麦轮速度，单位 rpm
+                ]
+
+        """
+        return self.get_all_speed(self)[3:]
+
+    def get_postion(self):
+        """底盘位置信息获取
+
+        获取底盘的位置信息
+        上电时刻机器人所在的位置为坐标原点
+
+        Args:
+            None
+
+        Returns:
+            (list) [
                 x (float): x轴向的位移
                 y (float): y轴向的位移
                 z (float): z轴向的位移
-            }
-        
+            ]
+
         """
         response = self.send_query('chassis position ?')
         return self._process_response(response, float)
-    
+
+    def get_attitude(self):
+        """获取底盘姿态信息
+
+        查询底盘的姿态信息
+
+        Args:
+            None
+
+        Returns:   #TODO:确定返回值为 int 还是 float
+            (list) [
+                pitch (float): pitch 轴角度，单位 °
+                roll (float): roll 轴角度，单位 °
+                yaw (float): yaw 轴角度，单位 °
+            ]
+
+        """
+        response = self.send_query('chassis attitude ?')
+        return self._process_response(response, float)
+
+    def get_status(self):
+        """获取底盘状态信息
+
+        获取底盘状态信息
+
+        Args:
+            None
+
+        Returns:
+            (list) [
+                static (bool)：是否静止
+                uphill (bool)：是否上坡
+                downhill (bool)：是否下坡
+                on_slope (bool)：是否溜坡
+                pick_up (bool)：是否被拿起
+                slip (bool)：是否滑行
+                impact_x (bool)：x 轴是否感应到撞击
+                impact_y (bool)：y 轴是否感应到撞击
+                impact_z (bool)：z 轴是否感应到撞击
+                roll_over (bool)：是否翻车
+                hill_static (bool)：是否在坡上静止
+            ]
+
+        """
+        response = self.send_query('chassis status ?')
+        return self._process_response(response, bool)
