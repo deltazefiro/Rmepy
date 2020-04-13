@@ -3,9 +3,9 @@ from . import logger
 
 class CmdPkgTemplate(object):
     def __init__(self, robot):
-        self._send_cmd = robot.send_cmd
-        self._send_query = robot.send_query
-        self._log = logger.Logger('Commends')
+        self.send_cmd = robot.send_cmd
+        self.send_query = robot.send_query
+        self.log = logger.Logger('Commends')
 
     def _process_response(self, data, type_list):
         try:
@@ -17,7 +17,7 @@ class CmdPkgTemplate(object):
                 data = [type_list(i) if type_list != bool else bool(int(i))
                         for i in data]
         except (TypeError, ValueError) as e:
-            self._log.error("Error at processing response: %s does not match %s" %(data, type_list))
+            self.log.error("Error at processing response: %s does not match %s" %(data, type_list))
             data = None
         return data
 
@@ -38,7 +38,7 @@ class BasicCtrl(CmdPkgTemplate):
             None
 
         """
-        return self._send_cmd('commend')
+        return self.send_cmd('commend')
 
     def quit_cmd_mode(self):
         """退出 SDK 模式
@@ -53,7 +53,7 @@ class BasicCtrl(CmdPkgTemplate):
             None
 
         """
-        return self._send_cmd('quit')
+        return self.send_cmd('quit')
 
     def set_robot_mode(self, mode):
         """设置机器人的运动模式
@@ -73,7 +73,7 @@ class BasicCtrl(CmdPkgTemplate):
         if mode not in (0, 1, 2):
             self.log.error(
                 "Set_chassis_following_mode: 'mode' must be an integer from 0 to 2")
-        return self._send_cmd('robot mode ' + mode_enum[mode])
+        return self.send_cmd('robot mode ' + mode_enum[mode])
 
     def get_robot_mode(self):
         """获取机器人运动模式
@@ -91,7 +91,7 @@ class BasicCtrl(CmdPkgTemplate):
 
         """
         mode_enum = ('chassis_lead', 'gimbal_lead', 'free')
-        return mode_enum.index(self._send_cmd('robot mode ?'))
+        return mode_enum.index(self.send_cmd('robot mode ?'))
 
 
 class Chassis(CmdPkgTemplate):
@@ -112,7 +112,7 @@ class Chassis(CmdPkgTemplate):
             None
 
         """
-        return self._send_cmd('chassis speed x %f y %f z %f' % (speed_x, speed_y, speed_yaw))
+        return self.send_cmd('chassis speed x %f y %f z %f' % (speed_x, speed_y, speed_yaw))
 
     def set_wheel_speed(self, speed_w1, speed_w2, speed_w3, speed_w4):
         """底盘轮子速度控制
@@ -129,7 +129,7 @@ class Chassis(CmdPkgTemplate):
             None
 
         """
-        return self._send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' % (speed_w1, speed_w2, speed_w3, speed_w4))
+        return self.send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' % (speed_w1, speed_w2, speed_w3, speed_w4))
 
     def shift(self, x=0, y=0, yaw=0, speed_xy=0.5, speed_yaw=90):
         """底盘相对位置控制
@@ -147,7 +147,7 @@ class Chassis(CmdPkgTemplate):
             None
 
         """
-        return self._send_cmd('chassis move x %f y %f z %d vxy %f vz %f' % (x, y, yaw, speed_xy, speed_yaw))
+        return self.send_cmd('chassis move x %f y %f z %d vxy %f vz %f' % (x, y, yaw, speed_xy, speed_yaw))
 
     def get_all_speed(self):
         """底盘速度信息获取
@@ -170,7 +170,7 @@ class Chassis(CmdPkgTemplate):
 
 
         """
-        response = self._send_query('chassis position ?')
+        response = self.send_query('chassis position ?')
         return self._process_response(response, (float, float, float, int, int, int, int))
 
     def get_speed(self):
@@ -227,7 +227,7 @@ class Chassis(CmdPkgTemplate):
             ]
 
         """
-        response = self._send_query('chassis position ?')
+        response = self.send_query('chassis position ?')
         return self._process_response(response, float)
 
     def get_attitude(self):
@@ -246,7 +246,7 @@ class Chassis(CmdPkgTemplate):
             ]
 
         """
-        response = self._send_query('chassis attitude ?')
+        response = self.send_query('chassis attitude ?')
         return self._process_response(response, float)
 
     def get_status(self):
@@ -273,5 +273,5 @@ class Chassis(CmdPkgTemplate):
             ]
 
         """
-        response = self._send_query('chassis status ?')
+        response = self.send_query('chassis status ?')
         return self._process_response(response, bool)
