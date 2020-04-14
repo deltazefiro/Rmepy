@@ -16,15 +16,29 @@ import numpy as np
 
 from . import libh264decoder
 from . import logger
-from .decorators import  retry
+from .decorators import retry
+
 
 class VideoStreamReceiver(object):
-    def __init__(self, robot, port='40921'):
+    def __init__(self, robot, port='40921', buffer_size=15):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
         self.log = logger.Logger(self)
         self.running = False
+        self.recevier_buffer = queue.deque(maxlen=buffer_size)
+
+    def __del__(self):
+        self.log.info("Shuting down VideoStreamReceiver ...")
+        if self.running:
+            self.running = False
+            self.thread.join()
+            self.log.info(
+                'Shutted down VideoStreamReceiver thread successfully.')
+            self.socket.close()
+        else:
+            self.log.info(
+                'VideoStreamReceiver thread has not been started. Skip ...')
 
     @retry(n_retries=3)
     def bind(self):
@@ -39,9 +53,9 @@ class VideoStreamReceiver(object):
             self.log.info("VideoStream port bound.")
             return True
 
-
     def start(self):
         self.bind()
+        self.robot.basic_ctrl.start_video_stream()
         self.running = True
         self.thread = threading.Thread(target=self.update)
         self.thread.start()
@@ -53,19 +67,22 @@ class VideoStreamReceiver(object):
         for framedata in frames:
             (frame, w, h, ls) = framedata
             if frame is not None:
-                frame = np.fromstring(frame, dtype=np.ubyte, count=len(frame), sep='')
+                frame = np.fromstring(
+                    frame, dtype=np.ubyte, count=len(frame), sep='')
                 frame = (frame.reshape((h, int(ls / 3), 3)))
                 frame = frame[:, :w, :]
                 res_frame_list.append(frame)
 
         return res_frame_list
 
-    def update(self):
+    def _update_receiver(self):
+        while  self.running:
+            self.socket.listen
+
+    def _update_decoder(self):
         package_data = b''
 
-        self.connection.start_video_recv()
-
-        while not self.is_shutdown: 
+        while not self.is_shutdown:
             buff = self.connection.recv_video_data()
             if buff:
                 package_data += buff
@@ -78,6 +95,4 @@ class VideoStreamReceiver(object):
                                 break
                             print('video decoder queue full')
                             continue
-                    package_data=b''
-
-        self.connection.stop_video_recv()
+                    package_data = b''

@@ -17,7 +17,8 @@ class CmdPkgTemplate(object):
                 data = [type_list(i) if type_list != bool else bool(int(i))
                         for i in data]
         except (TypeError, ValueError) as e:
-            self.log.error("Error at processing response: %s does not match %s" %(data, type_list))
+            self.log.error(
+                "Error at processing response: %s does not match %s" % (data, type_list))
             data = None
         return data
 
@@ -92,6 +93,36 @@ class BasicCtrl(CmdPkgTemplate):
         """
         mode_enum = ('chassis_lead', 'gimbal_lead', 'free')
         return mode_enum.index(self.send_cmd('robot mode ?'))
+
+        def video_stream_on(self):
+            """开启视频流推送
+
+            打开视频流
+            打开后，可从视频流端口接收到 H.264 编码的码流数据
+
+            Args:
+                None
+
+            Returns:
+                None
+
+            """
+            return self.send_cmd('stream on')
+
+        def video_stream_off(self):
+            """关闭视频流推送
+
+            关闭视频流
+            关闭视频流后，H.264 编码的码流数据将会停止输出
+
+            Args:
+                None
+
+            Returns:
+                None
+
+            """
+            return self.send_cmd('stream off')
 
 
 class Chassis(CmdPkgTemplate):

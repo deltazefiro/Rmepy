@@ -19,14 +19,15 @@ class PushDataReceiver(object):
 
     def __del__(self):
         self.log.info("Shuting down PushDataReceiver ...")
-        self.running = False
-        try:
+        if self.running:
+            self.running = False
             self.thread.join()
-            self.log.info('Shutted down PushDataReceiver thread successfully.')
-        except AttributeError:
-            self.log.warn(
+            self.log.info(
+                'Shutted down PushDataReceiver thread successfully.')
+            self.socket.close()
+        else:
+            self.log.info(
                 'PushDataReceiver thread has not been started. Skip ...')
-        self.socket.close()
 
     def bind(self, retry=3):
         self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
