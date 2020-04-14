@@ -54,12 +54,10 @@ class CommendSender(object):
         try:
             self.socket.connect((self.ip, self.port))
             self.log.info("ControlCommend port connected.")
-            error = 0
+            return True
         except socket.error as e:
             self.log.warn("Fail to connect to S1. Error: %s" % e)
-            error = 1
-
-        return error, None
+            return False
 
     def send(self, cmd):
         """ Send a commend to S1.
@@ -68,20 +66,24 @@ class CommendSender(object):
             cmd: (str) 命令
 
         Returns:
-            error_code: (int) 错误码
-                {0: 无错误，1: 发送时出错，2: 接收回应时出错}
+            (tuple) (
+                succ (bool): 是否成功
+                response (str): 来着机器人的回复
+            )
 
         """
         try:
             self.socket.send(cmd.encode('utf-8'))
         except socket.error as e:
-            return 1, e
-
+            self.log.warn("Error at sending '%s': %s" % (cmd, e))
+            return False, None
         try:
             recv = self.socket.recv(1024)
-            return 0, recv.decode('utf-8')
         except socket.error as e:
-            return 2, e
+            return False, None
+            self.log.error(
+                "Error at receving the response of '%s': %s" % (cmd, e))
+        return True, recv.decode('utf-8')
 
     @retry(n_retries=3)
     def send_commend(self, cmd):
@@ -94,27 +96,20 @@ class CommendSender(object):
             cmd: (str) 命令
 
         Returns:
-            error: (int) 错误码
-            None: (None) 用于适配修饰器
-
+            (succ: (bool) 是否成功，被修饰器使用)
+            None
         """
-        error, response = self.send(cmd)
-        if error == 1:
-            self.log.warn("Error at sending '%s': %s" % (cmd, response))
-        elif error == 2:
-            self.log.error(
-                "Error at receiving the response of '%s': %s" % (cmd, response))
-        elif response == '':
-            error = 3
-            self.log.warn("Got null response of '%s'." % cmd)
-        elif response == 'OK':
-            self.log.info("'%s' recevied 'OK'." % cmd)
-        else:
-            error = 4
-            self.log.warn(
-                "Received an error when executing '%s': %s" % (cmd, response))
-
-        return error, None
+        succ, response = self.send(cmd)
+        if succ:
+            if response == 'OK':
+                self.log.info("'%s' recevied 'OK'." % cmd)
+                return True
+            elif response == '':
+                self.log.warn("Got null response of '%s'." % cmd)
+            else:
+                self.log.warn(
+                    "Received an error when executing '%s': %s" % (cmd, response))
+        return False
 
     @retry(n_retries=3)
     def send_query(self, cmd):
@@ -127,20 +122,17 @@ class CommendSender(object):
             cmd: (str) 命令
 
         Returns:
-            error: (int) 错误码
+            (succ: (bool) 是否成功，被修饰器使用)
             response: (str) 来自s1的返回值
 
         """
-        error, response = self.send(cmd)
-        if error == 1:
-            self.log.warn("Error at sending '%s': %s" % (cmd, response))
-        if error == 2:
-            self.log.error(
-                "Error at recevied the response of '%s': %s" % (cmd, response))
-        elif response == '':
-            error = 3
-            self.log.warn("Got null response of '%s'." % cmd)
-        else:
-            self.log.info("'%s' received '%s'." % (cmd, response))
+        succ, response = self.send(cmd)
 
-        return error, response
+        if succ:
+            if response == '':
+                self.log.warn("Got null response of '%s'." % cmd)
+            else:
+                self.log.info("'%s' received '%s'." % (cmd, response))
+                return True, response
+
+        return False, None

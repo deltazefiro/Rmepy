@@ -11,8 +11,8 @@ from .logger import Logger
 
 
 class Robot(object):
-    def __init__(self):
-        self.ip = '127.0.0.1'
+    def __init__(self, ip = '192.168.2.1'):
+        self.ip = ip
 
         self.CommendSender = CommendSender(self)
         self.send = self.CommendSender.send
@@ -28,4 +28,5 @@ class Robot(object):
 
         self.basic_ctrl = commends.BasicCtrl(self)
         self.chassis = commends.Chassis(self)
-        self.logger = Logger('RMEP(main)')
+        self.log = Logger('RMEP(main)')
+

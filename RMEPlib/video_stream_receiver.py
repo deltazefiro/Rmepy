@@ -32,10 +32,12 @@ class VideoStreamReceiver(object):
 
         try:
             self.socket.bind((self.ip, self.port))
-            self.log.info("VideoStream port bound.")
         except socket.error as e:
             self.log.error("Fail to bind VideoStream port. Error: %s" % e)
-            return 
+            return False
+        else:
+            self.log.info("VideoStream port bound.")
+            return True
 
 
     def start(self):
