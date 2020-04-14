@@ -16,12 +16,13 @@ class CommendSender(object):
 
     """
 
-    def __init__(self, robot, port=40923, retry_interval=1):
+    def __init__(self, robot, port=40923, retry_interval=1, time_out=3):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
         self.retry_interval = retry_interval
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.settimeout(time_out)
         self.log = logger.Logger(self)
 
         # robot.send = self.send
@@ -73,16 +74,16 @@ class CommendSender(object):
 
         """
         try:
-            self.socket.send(cmd.encode('utf-8'))
+            self.socket.sendall(cmd.encode('utf-8'))
         except socket.error as e:
             self.log.warn("Error at sending '%s': %s" % (cmd, e))
             return False, None
         try:
-            recv = self.socket.recv(1024)
+            recv = self.socket.recv(4096)
         except socket.error as e:
-            return False, None
             self.log.error(
                 "Error at receving the response of '%s': %s" % (cmd, e))
+            return False, None
         return True, recv.decode('utf-8')
 
     @retry(n_retries=3)

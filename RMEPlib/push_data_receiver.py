@@ -56,7 +56,7 @@ class PushDataReceiver(object):
         self.socket.settimeout(1)
         while self.running:
             try:
-                recv = self.socket.recv(1024).decode('utf-8')
+                recv = self.socket.recv(4096).decode('utf-8')
                 self.robot.push_buffer.appendleft()
             except socket.timeout:
                 continue

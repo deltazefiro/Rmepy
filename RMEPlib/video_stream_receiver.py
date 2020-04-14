@@ -42,8 +42,7 @@ class VideoStreamReceiver(object):
 
     @retry(n_retries=3)
     def bind(self):
-        self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
-
+        # self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
         try:
             self.socket.bind((self.ip, self.port))
         except socket.error as e:
@@ -57,9 +56,27 @@ class VideoStreamReceiver(object):
         self.bind()
         self.robot.basic_ctrl.start_video_stream()
         self.running = True
-        self.thread = threading.Thread(target=self.update)
+
+        self.thread = threading.Thread(target=self._receiver_thread)
         self.thread.start()
         self.log.info('VideoStream thread started.')
+
+    def _receiver_thread(self):
+        self.socket.settimeout(1)
+        self.socket.listen()
+        conn, addr = self.socket.accept()
+        self.log.info("Video stream established.")
+        while self.running:
+            try:
+                data = conn.recv(4096)
+                if data:
+                    self.recevier_buffer.appendleft(data)
+                elif self.running:
+                    self.log.error('Got a null msg from the video stream.')
+            except socket.timeout:
+                if self.running:
+                    self.log.warn(
+                        'Nothing has been received from VideoStream port. (timeout)')
 
     def _h264_decode(self, packet_data):
         res_frame_list = []
@@ -75,11 +92,8 @@ class VideoStreamReceiver(object):
 
         return res_frame_list
 
-    def _update_receiver(self):
-        while  self.running:
-            self.socket.listen
 
-    def _update_decoder(self):
+    def _decoder_thread(self):
         package_data = b''
 
         while not self.is_shutdown:

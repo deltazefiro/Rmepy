@@ -21,7 +21,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     with conn:
         log.info('Connected by ' + str(addr))
         while True:
-            data = conn.recv(1024).decode('utf-8')
+            data = conn.recv(4096).decode('utf-8')
             if not data:
                 log.warn("Server closed.")
                 # break
