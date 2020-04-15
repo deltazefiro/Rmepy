@@ -240,9 +240,15 @@ class PushDataReceiver(object):
                 'PushDataReceiver thread has not been started. Skip ...')
 
     @retry(n_retries=3)
+    def start(self):
+        self.bind()
+        self.running = True
+        self.thread = threading.Thread(target=self._receiver_thread_task)
+        self.thread.start()
+        self.log.info('PushDataReceiver thread started.')
+
     def bind(self):
         self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
-
         try:
             self.socket.bind((self.ip, self.port))
         except socket.error as e:
@@ -251,13 +257,6 @@ class PushDataReceiver(object):
         else:
             self.log.info("Push port bound.")
             return False
-
-    def start(self):
-        self.bind()
-        self.running = True
-        self.thread = threading.Thread(target=self._receiver_thread_task)
-        self.thread.start()
-        self.log.info('PushDataReceiver thread started.')
 
     def _receiver_thread_task(self):
         while self.running:
