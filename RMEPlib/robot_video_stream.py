@@ -1,7 +1,7 @@
 
 """
 
-VideoStreamRecevier 中的代码 和 libh264decoder 来自 dji-sdk/RoboMaster-SDK
+RobotVideoStream 中的部分代码 和 libh264decoder 来自 dji-sdk/RoboMaster-SDK
 详见 https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream
 
 """
@@ -19,14 +19,20 @@ from . import logger
 from .decorators import retry
 
 
-class VideoStreamReceiver(object):
-    def __init__(self, robot, port='40921', buffer_size=15):
+class RobotVideoStream(object):
+    def __init__(self, robot, port='40921', decoder_buffer_size=32, display_buffer_size=5):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
         self.log = logger.Logger(self)
+
+        self.video_decoder = libh264decoder.H264Decoder()
+        libh264decoder.disable_logging()
+
+        self.decoder_buffer = queue.deque(maxlen=decoder_buffer_size)
+        self.display_buffer = queue.deque(maxlen=display_buffer_size)
+
         self.running = False
-        self.recevier_buffer = queue.deque(maxlen=buffer_size)
 
     def __del__(self):
         self.log.info("Shuting down VideoStreamReceiver ...")
@@ -70,13 +76,28 @@ class VideoStreamReceiver(object):
             try:
                 data = conn.recv(4096)
                 if data:
-                    self.recevier_buffer.appendleft(data)
+                    self.decoder_buffer.appendleft(data)
                 elif self.running:
                     self.log.error('Got a null msg from the video stream.')
             except socket.timeout:
                 if self.running:
                     self.log.warn(
                         'Nothing has been received from VideoStream port. (timeout)')
+
+    def _decoder_thread(self):
+        package_data = b''
+
+        while self.running:
+            try:
+                buff = self.decoder_buffer.pop()
+            except IndexError:
+                self.log.warn("decoder_buffer empty.")
+            else:
+                package_data += buff
+                if len(buff) != 1460:
+                    for frame in self._h264_decode(package_data):
+                        self.display_buffer.appendleft(frame)
+                    package_data = b''
 
     def _h264_decode(self, packet_data):
         res_frame_list = []
@@ -91,22 +112,3 @@ class VideoStreamReceiver(object):
                 res_frame_list.append(frame)
 
         return res_frame_list
-
-
-    def _decoder_thread(self):
-        package_data = b''
-
-        while not self.is_shutdown:
-            buff = self.connection.recv_video_data()
-            if buff:
-                package_data += buff
-                if len(buff) != 1460:
-                    for frame in self._h264_decode(package_data):
-                        try:
-                            self.video_decoder_msg_queue.put(frame, timeout=2)
-                        except Exception as e:
-                            if self.is_shutdown:
-                                break
-                            print('video decoder queue full')
-                            continue
-                    package_data = b''
