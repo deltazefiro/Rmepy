@@ -28,12 +28,6 @@ class CommendSender(object):
         self.socket.settimeout(socket_time_out)
         self.log = logger.Logger(self)
 
-        # robot.send = self.send
-        # robot.send_cmd = self.send_commend
-        # robot.send_query = self.send_query
-        # robot.connect = self.connect
-        # self.connect()
-
     def __del__(self):
         self.log.info("Shuting down CommendSender ...")
         # self.socket.shutdown()
@@ -163,21 +157,21 @@ class VideoStreamReceiver(object):
         self.log.info("Shuting down VideoStreamReceiver ...")
         if self.running:
             self._receiver_thread.join()
-            self.log.info(
-                "Shutted down VideoStreamReceiver thread successfully.")
             self.socket.close()
-            self.running = False
+            self.log.info(
+                'Shutted down VideoStreamReceiver thread successfully.')
         else:
             self.log.info(
-                "VideoStreamReceiver thread has not been started. Skip ...")
+                'VideoStreamReceiver thread has not been started. Skip ...')
+        self.running = False
 
     def start(self):
         self.robot.basic_ctrl.video_stream_on()
         self.bind()
         self.establish()
-        self.running = True
         self._receiver_thread.start()
         self.log.info("VideoStream thread started.")
+        self.running = True
 
     @retry(n_retries=3)
     def bind(self):
@@ -226,26 +220,27 @@ class PushDataReceiver(object):
         self.socket.settimeout(1)
         self.log = logger.Logger(self)
         self.running = False
+        self._receiver_thread = threading.Thread(
+            target=self._receiver_thread_task)
 
     def __del__(self):
         self.log.info("Shuting down PushDataReceiver ...")
         if self.running:
-            self.thread.join()
+            self._receiver_thread.join()
+            self.socket.close()
             self.log.info(
                 'Shutted down PushDataReceiver thread successfully.')
-            self.socket.close()
-            self.running = False
         else:
             self.log.info(
                 'PushDataReceiver thread has not been started. Skip ...')
+        self.running = False
 
     @retry(n_retries=3)
     def start(self):
         self.bind()
-        self.running = True
-        self.thread = threading.Thread(target=self._receiver_thread_task)
-        self.thread.start()
+        self._receiver_thread.start()
         self.log.info('PushDataReceiver thread started.')
+        self.running = True
 
     def bind(self):
         self.log.info("Binding to %s:%s ..." % (self.ip, self.port))

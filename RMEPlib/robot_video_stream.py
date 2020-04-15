@@ -40,20 +40,22 @@ class RobotVideoStream(object):
             target=self._decoder_thread_task)
 
     def __del__(self):
-        self.log.info("Shuting down VideoDecoder thread ...")
         if self.running:
-            self._decoder_thread.join()
-            self.log.info("Shutted down VideoDecoder thread successfully.")
-            self.running = False
+            self.log.info("Shuting down VideoDecoder thread ...")
+            self._receiver_thread.join()
+            self.log.info(
+                'Shutted down VideoDecoder thread successfully.')
         else:
-            self.log.info("VideoDecoder thread has not been started. Skip ...")
+            self.log.info(
+                'VideoDecoder thread has not been started. Skip ...')
+        self.running = False
+
 
     def start(self):
-        self.running = True
         self.video_stream_receiver.start()
-
         self._decoder_thread.start()
         self.log.info("VideoStream thread started.")
+        self.running = True
 
     def _decoder_thread_task(self):
         package_data = b''
