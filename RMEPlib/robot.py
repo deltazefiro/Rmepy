@@ -3,15 +3,14 @@
 
 import queue
 
-from .commend_sender import CommendSender
-from .push_data_receiver import PushDataReceiver
-from .robot_video_stream import RobotVideoStream
 from . import commends
+from .connection import CommendSender, PushDataReceiver, VideoStreamReceiver
 from .logger import Logger
+from .robot_video_stream import RobotVideoStream
 
 
 class Robot(object):
-    def __init__(self, ip = '192.168.2.1'):
+    def __init__(self, ip='192.168.2.1'):
         self.ip = ip
 
         self.CommendSender = CommendSender(self)
@@ -28,4 +27,3 @@ class Robot(object):
         self.basic_ctrl = commends.BasicCtrl(self)
         self.chassis = commends.Chassis(self)
         self.log = Logger('RMEP(main)')
-

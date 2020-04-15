@@ -16,86 +16,46 @@ import numpy as np
 
 from . import libh264decoder
 from . import logger
+from . import connection
 from .decorators import retry
 
 
 class RobotVideoStream(object):
-    def __init__(self, robot, port=40921, decoder_buffer_size=32, display_buffer_size=5):
+    def __init__(self, robot, port=40921, recv_buffer_size=32, display_buffer_size=5,
+                 socket_retry_interval=3, socket_time_out=3):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
         self.log = logger.Logger(self)
+        self.running = False
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(1)
+        self.video_stream_receiver = connection.VideoStreamReceiver(
+            robot, port=port, retry_interval=socket_retry_interval, time_out=socket_time_out, recv_buffer_size=recv_buffer_size)
+        self.recv_buffer = self.video_stream_receiver.recv_buffer
 
         self.video_decoder = libh264decoder.H264Decoder()
         libh264decoder.disable_logging()
-
-        self.decoder_buffer = queue.deque(maxlen=decoder_buffer_size)
         self.display_buffer = queue.deque(maxlen=display_buffer_size)
-
-        self._receiver_thread = threading.Thread(target=self._receiver_thread_task)
-        self._decoder_thread = threading.Thread(target=self._decoder_thread_task)
-
-        self.running = False
+        self._decoder_thread = threading.Thread(
+            target=self._decoder_thread_task)
 
     def __del__(self):
-        self.log.info("Shuting down VideoStreamReceiver ...")
         if self.running:
-            self.running = False
-            self._decoder_thread.join()
+            self.log.info("Shuting down VideoDecoder thread ...")
             self._receiver_thread.join()
-            self.log.info("Shutted down VideoStreamReceiver thread successfully.")
-            self.socket.close()
+            self.log.info(
+                'Shutted down VideoDecoder thread successfully.')
         else:
-            self.log.info("VideoStreamReceiver thread has not been started. Skip ...")
+            self.log.info(
+                'VideoDecoder thread has not been started. Skip ...')
+        self.running = False
+
 
     def start(self):
-        self.robot.basic_ctrl.video_stream_on()
-        self._bind()
-        self._establish()
-        self.running = True
-
-        self._receiver_thread.start()
+        self.video_stream_receiver.start()
         self._decoder_thread.start()
         self.log.info("VideoStream thread started.")
-
-    @retry(n_retries=3)
-    def _bind(self):
-        # self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
-        try:
-            self.socket.bind((self.ip, self.port))
-        except socket.error as e:
-            self.log.error("Fail to bind VideoStream port. Error: %s" % e)
-            return False
-        else:
-            self.log.info("VideoStream port bound.")
-            return True
-
-    @retry(n_retries=3)
-    def _establish(self):
-        self.socket.listen()
-        try:
-            self.conn, _ = self.socket.accept()
-        except socket.error as e:
-            self.log.error("Fail to establish video stream. Error: %s" % e)
-            return False
-        else:
-            self.log.info("Video stream established.")
-            return True
-
-    def _receiver_thread_task(self):
-        while self.running:
-            try:
-                data = self.conn.recv(4096)
-                if data:
-                    self.decoder_buffer.appendleft(data)
-                elif self.running:
-                    self.log.error("Got a null msg from the video stream.")
-            except socket.timeout:
-                if self.running:
-                    self.log.warn("Nothing has been received from VideoStream port. (timeout)")
+        self.running = True
 
     def _decoder_thread_task(self):
         package_data = b''
@@ -104,7 +64,7 @@ class RobotVideoStream(object):
             try:
                 buff = self.decoder_buffer.pop()
             except IndexError:
-                # self.log.warn("decoder_buffer empty.")
+                self.log.warn("decoder_buffer empty.")
                 continue
             else:
                 package_data += buff
@@ -120,7 +80,8 @@ class RobotVideoStream(object):
         for framedata in frames:
             (frame, w, h, ls) = framedata
             if frame is not None:
-                frame = np.fromstring(frame, dtype=np.ubyte, count=len(frame), sep='')
+                frame = np.fromstring(
+                    frame, dtype=np.ubyte, count=len(frame), sep='')
                 frame = (frame.reshape((h, int(ls / 3), 3)))
                 frame = frame[:, :w, :]
                 res_frame_list.append(frame)

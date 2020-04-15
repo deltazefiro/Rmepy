@@ -51,4 +51,5 @@ print(rm.chassis.get_all_speed())
 - [x]  接收s1的状态推送
 - [ ]  对s1的状态推送信息进行处理
 - [ ]  封装一些基本的控制命令（已完成chassis和basic_ctrl模块）
-- [ ]  接收s1的视频流
+- [x]  接收s1的视频流
+- [ ] 对视频流接收进行测试
