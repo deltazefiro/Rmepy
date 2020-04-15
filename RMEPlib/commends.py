@@ -94,35 +94,35 @@ class BasicCtrl(CmdPkgTemplate):
         mode_enum = ('chassis_lead', 'gimbal_lead', 'free')
         return mode_enum.index(self.send_cmd('robot mode ?'))
 
-        def video_stream_on(self):
-            """开启视频流推送
+    def video_stream_on(self):
+        """开启视频流推送
 
-            打开视频流
-            打开后，可从视频流端口接收到 H.264 编码的码流数据
+        打开视频流
+        打开后，可从视频流端口接收到 H.264 编码的码流数据
 
-            Args:
-                None
+        Args:
+            None
 
-            Returns:
-                None
+        Returns:
+            None
 
-            """
-            return self.send_cmd('stream on')
+        """
+        return self.send_cmd('stream on')
 
-        def video_stream_off(self):
-            """关闭视频流推送
+    def video_stream_off(self):
+        """关闭视频流推送
 
-            关闭视频流
-            关闭视频流后，H.264 编码的码流数据将会停止输出
+        关闭视频流
+        关闭视频流后，H.264 编码的码流数据将会停止输出
 
-            Args:
-                None
+        Args:
+            None
 
-            Returns:
-                None
+        Returns:
+            None
 
-            """
-            return self.send_cmd('stream off')
+        """
+        return self.send_cmd('stream off')
 
 
 class Chassis(CmdPkgTemplate):
