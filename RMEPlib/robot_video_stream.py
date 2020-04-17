@@ -7,16 +7,15 @@ RobotVideoStream 中的部分代码 和 libh264decoder 来自 dji-sdk/RoboMaster
 """
 
 import queue
+import socket
 import threading
 import time
-import socket
 
 import cv2
 import numpy as np
+from PIL import Image as PImage
 
-from . import libh264decoder
-from . import logger
-from . import connection
+from . import connection, libh264decoder, logger
 from .decorators import retry
 
 
@@ -28,6 +27,7 @@ class RobotVideoStream(object):
         self.port = port
         self.log = logger.Logger(self)
         self.running = False
+        self.display_running = False
 
         self.video_stream_receiver = connection.VideoStreamReceiver(
             robot, port=port, retry_interval=socket_retry_interval, time_out=socket_time_out, recv_buffer_size=recv_buffer_size)
@@ -36,35 +36,49 @@ class RobotVideoStream(object):
         self.video_decoder = libh264decoder.H264Decoder()
         libh264decoder.disable_logging()
         self.display_buffer = queue.deque(maxlen=display_buffer_size)
-        self._decoder_thread = threading.Thread(
-            target=self._decoder_thread_task)
+        self._decoder_thread = threading.Thread(target=self._decoder_thread_task)
+        self._display_thread = threading.Thread(target=self._display_thread_task)
 
     def __del__(self):
+        if self.display_running:
+            self.log.info("Shuting down Display thread ...")
+            self._display_thread.join()
+            self.log.info(
+                'Shutted down Display thread successfully.')
+            self.display_running = False
+        else:
+            self.log.info(
+                'Display thread has not been started. Skip ...')
+
         if self.running:
             self.log.info("Shuting down VideoDecoder thread ...")
             self._receiver_thread.join()
             self.log.info(
                 'Shutted down VideoDecoder thread successfully.')
+            self.running = False
         else:
             self.log.info(
                 'VideoDecoder thread has not been started. Skip ...')
-        self.running = False
 
 
     def start(self):
         self.video_stream_receiver.start()
         self._decoder_thread.start()
         self.log.info("VideoStream thread started.")
-        self.running = True
+
+    def display(self):
+        self._display_thread.start()
+        self.log.info("Display thread started.")
 
     def _decoder_thread_task(self):
+        self.running = True
         package_data = b''
 
         while self.running:
             try:
-                buff = self.decoder_buffer.pop()
+                buff = self.recv_buffer.pop()
             except IndexError:
-                self.log.warn("decoder_buffer empty.")
+                self.log.warn("recv_buffer empty.")
                 continue
             else:
                 package_data += buff
@@ -87,3 +101,30 @@ class RobotVideoStream(object):
                 res_frame_list.append(frame)
 
         return res_frame_list
+
+    def _display_thread_task(self):
+        self.display_running = True
+        while self.display_running:
+            frame = self.get_frame()
+            if frame:
+                image = PImage.fromarray(frame)
+                img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                cv2.imshow("Liveview", img)
+            cv2.waitKey(1)
+
+    def get_last_frame(self):
+        try:
+            return self.display_buffer[0]
+        except IndexError:
+            self.log.warn("Fail to get last frame: display buffer empty.")
+            return None
+
+    def get_frame(self):
+        try:
+            return self.display_buffer.pop()
+        except IndexError:
+            self.log.warn("Fail to get frame: display buffer empty.")
+
+    @property
+    def last_frame(self):
+        return self.get_last_frame()
