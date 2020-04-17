@@ -1,3 +1,4 @@
+import traceback
 
 class Logger():
     def __init__(self, name):
@@ -44,8 +45,11 @@ class Logger():
         temp = input("Force to continue? ('y' to continue / 'n' to print Traceback) ")
         print("=============================================")
         if temp.upper() != 'Y':
-            print("\033[0;31m", end='')
-            raise
+            print("\n\033[0;31m" + "Traceback (most recent call last):" + "\033[0m")
+            for line in traceback.format_stack()[:-1]:
+                print("\033[0;31m" + line  + "\033[0m")
+            print("\n=============================================")
+            exit()
 
 
 if  __name__ == '__main__':
