@@ -20,8 +20,7 @@ from .decorators import retry
 
 
 class RobotVideoStream(object):
-    def __init__(self, robot, port=40921, recv_buffer_size=32, display_buffer_size=5,
-                 socket_retry_interval=3, socket_time_out=3):
+    def __init__(self, robot, port=40921, recv_buffer_size=32, display_buffer_size=5, socket_time_out=3):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
@@ -30,7 +29,7 @@ class RobotVideoStream(object):
         self.display_running = False
 
         self.video_stream_receiver = connection.VideoStreamReceiver(
-            robot, port=port, retry_interval=socket_retry_interval, time_out=socket_time_out, recv_buffer_size=recv_buffer_size)
+            robot, port=port, time_out=socket_time_out, recv_buffer_size=recv_buffer_size)
         self.recv_buffer = self.video_stream_receiver.recv_buffer
 
         self.video_decoder = libh264decoder.H264Decoder()

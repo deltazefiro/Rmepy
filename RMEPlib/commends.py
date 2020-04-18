@@ -1,5 +1,5 @@
 from . import logger
-
+from .decorators import accepts
 
 class CmdPkgTemplate(object):
     def __init__(self, robot):
@@ -56,6 +56,7 @@ class BasicCtrl(CmdPkgTemplate):
         """
         return self.send_cmd('quit')
 
+    @accepts(mode=(int, 0, 2))
     def set_robot_mode(self, mode):
         """设置机器人的运动模式
 
@@ -129,6 +130,7 @@ class Chassis(CmdPkgTemplate):
     def __init__(self, robot):
         super().__init__(robot)
 
+    @accepts(speed_x=(float, -3.5, 3.5), speed_y=(float, -3.5, 3.5), speed_yaw=(float, -600, 600))
     def set_vel(self, speed_x, speed_y, speed_yaw):
         """底盘运动速度控制
 
@@ -145,6 +147,7 @@ class Chassis(CmdPkgTemplate):
         """
         return self.send_cmd('chassis speed x %f y %f z %f' % (speed_x, speed_y, speed_yaw))
 
+    @accepts(speed_w1=(int, -1000, 1000), speed_w2=(int, -1000, 1000), speed_w3=(int, -1000, 1000), speed_w4=(int, -1000, 1000))
     def set_wheel_speed(self, speed_w1, speed_w2, speed_w3, speed_w4):
         """底盘轮子速度控制
 

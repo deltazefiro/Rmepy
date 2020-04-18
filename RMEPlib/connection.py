@@ -15,15 +15,13 @@ class CommendSender(object):
     Attributes:
         robot: robot对象
         port: 控制命令端口40923
-        retry_interval: 发送失败重试的间隔时间
 
     """
 
-    def __init__(self, robot, port=40923, retry_interval=1, socket_time_out=3):
+    def __init__(self, robot, port=40923, socket_time_out=3):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
-        self.retry_interval = retry_interval
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(socket_time_out)
         self.log = logger.Logger(self)
@@ -137,11 +135,10 @@ class CommendSender(object):
 
 
 class VideoStreamReceiver(object):
-    def __init__(self, robot, port=40921, retry_interval=1, time_out=3, recv_buffer_size=32):
+    def __init__(self, robot, port=40921, time_out=3, recv_buffer_size=32):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
-        self.retry_interval = retry_interval
         self.log = logger.Logger(self)
         self.running = False
 
