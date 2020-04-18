@@ -56,7 +56,7 @@ class BasicCtrl(CmdPkgTemplate):
         """
         return self.send_cmd('quit')
 
-    @accepts(mode=(int, 0, 2))
+    @accepts((int, 0, 2))
     def set_robot_mode(self, mode):
         """设置机器人的运动模式
 
@@ -72,9 +72,9 @@ class BasicCtrl(CmdPkgTemplate):
 
         """
         mode_enum = ('chassis_lead', 'gimbal_lead', 'free')
-        if mode not in (0, 1, 2):
-            self.log.error(
-                "Set_chassis_following_mode: 'mode' must be an integer from 0 to 2")
+        # if mode not in (0, 1, 2):
+        #     self.log.error(
+        #         "Set_chassis_following_mode: 'mode' must be an integer from 0 to 2")
         return self.send_cmd('robot mode ' + mode_enum[mode])
 
     def get_robot_mode(self):
@@ -147,7 +147,7 @@ class Chassis(CmdPkgTemplate):
         """
         return self.send_cmd('chassis speed x %f y %f z %f' % (speed_x, speed_y, speed_yaw))
 
-    @accepts(speed_w1=(int, -1000, 1000), speed_w2=(int, -1000, 1000), speed_w3=(int, -1000, 1000), speed_w4=(int, -1000, 1000))
+    @accepts((int, -1000, 1000), (int, -1000, 1000), (int, -1000, 1000), (int, -1000, 1000))
     def set_wheel_speed(self, speed_w1, speed_w2, speed_w3, speed_w4):
         """底盘轮子速度控制
 
@@ -165,6 +165,7 @@ class Chassis(CmdPkgTemplate):
         """
         return self.send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' % (speed_w1, speed_w2, speed_w3, speed_w4))
 
+    @accepts((float, -5, 5), (float, -5, 5), (int, -1800, 1800), (float, 0, 3.5), (float, 0, 600))
     def shift(self, x=0, y=0, yaw=0, speed_xy=0.5, speed_yaw=90):
         """底盘相对位置控制
 
