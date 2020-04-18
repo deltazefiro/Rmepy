@@ -6,7 +6,7 @@ RMEPlib 是一个对接 RobomasterEP官方sdk 的 python接口，目标是还原
 
 ### Caution:
 
-本项目仍在开发中，代码尚并不完整
+本项目仍在开发中，代码尚不完整
 
 且由于疫情等原因，并未经过实际测试
 
@@ -16,17 +16,17 @@ RMEPlib 是一个对接 RobomasterEP官方sdk 的 python接口，目标是还原
 
 ### Usage:
 
-1. git clone git@github.com:233a344a455/RMEPlib.git 克隆本项目代码
+1. git clone git@github.com:233a344a455/rmepy.git 克隆本项目代码
 2. 安装依赖：opencv-python, plt, numpy
-3. 编译官方提供的 [h264decoder](https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream/decoder)，将编译得到的两个.so文件放入 RMEPlib/
+3. 编译官方提供的 [h264decoder](https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream/decoder)，将编译得到的两个.so文件放入 rmepy/
 4. 在 clone 的位置下创建 脚本文件，可用以下代码测试
 
 
 ```python
-import RMEPlib
+import rmepy
 from time import sleep
 
-rm = RMEPlib.Robot()
+rm = rmepy.Robot()
 rm.connect()
 rm.basic_ctrl.enter_sdk_mode()
 sleep(1)
@@ -46,7 +46,7 @@ sleep(10)
 
 目前支持的其他命令的详细内容
 
-可以使用 help(RMEPlib.commends) 或 进入 ./RMEPlib/commends.py 查看
+可以使用 help(rmepy.commends) 或 进入 rmepy/commends.py 查看
 
 
 

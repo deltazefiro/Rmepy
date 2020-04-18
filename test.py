@@ -1,6 +1,6 @@
-import RMEPlib
+import rmepy
 
-rm = RMEPlib.Robot(ip='127.0.0.1')
+rm = rmepy.Robot(ip='127.0.0.1')
 rm.connect()
 rm.basic_ctrl.enter_sdk_mode()
 

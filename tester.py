@@ -3,7 +3,7 @@
 
 import socket
 import random
-from RMEPlib import logger
+from rmepy import logger
 
 HOST = '127.0.0.1'
 PORT = 40923
