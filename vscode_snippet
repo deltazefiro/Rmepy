@@ -16,19 +16,20 @@
 	"RMEPlib cmd": {
 		"prefix": "cmd",
 		"body": [
-			"def ${1:cmd_name}(self$2):",
-			"\t\"\"\"${3:Brief description}",
+			"accepts($1)",
+			"def ${2:cmd_name}(self$3):",
+			"\t\"\"\"${4:Brief_description}",
 			"\t",
-			"\t${4:Detailed description}",
+			"\t${5:Detailed_description}",
 			"\t",
 			"\tArgs:",
-			"\t\t${5:None}",
-			"\t",
-			"\tReturns:",
 			"\t\t${6:None}",
 			"\t",
+			"\tReturns:",
+			"\t\t${7:None}",
+			"\t",
 			"\t\"\"\"",
-			"\treturn ${7:None}",
+			"\treturn ${8:None}",
 			"$0"
 		],
 		"description": ""
