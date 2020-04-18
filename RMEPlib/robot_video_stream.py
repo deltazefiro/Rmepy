@@ -109,7 +109,7 @@ class RobotVideoStream(object):
                 image = PImage.fromarray(frame)
                 img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
                 cv2.imshow("Liveview", img)
-            cv2.waitKey(1)
+            cv2.waitKey(34) # 30 fps
 
     def get_last_frame(self):
         try:
