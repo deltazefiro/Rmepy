@@ -83,6 +83,7 @@ rmepy.Robot
         # Commends 封装的命令
         .basic_ctrl = commends.BasicCtrl()
         .chassis = commends.Chassis()
+        .gimbal = commends.Gimbal()
         
         # Video 基础视频模块
         .video = robot_video_stream.RobotVideoStream()

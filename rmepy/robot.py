@@ -26,4 +26,5 @@ class Robot(object):
 
         self.basic_ctrl = commends.BasicCtrl(self)
         self.chassis = commends.Chassis(self)
+        self.gimbal = commends.Gimbal(self)
         self.log = Logger('RMEP(main)')
