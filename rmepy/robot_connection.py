@@ -151,16 +151,16 @@ class VideoStreamReceiver(object):
             target=self._receiver_thread_task)
 
     def __del__(self):
+        self.running = False
         self.log.info("Shuting down VideoStreamReceiver ...")
+        self.socket.close()
         if self.running:
             self._receiver_thread.join()
-            self.socket.close()
             self.log.info(
                 'Shutted down VideoStreamReceiver thread successfully.')
         else:
             self.log.info(
                 'VideoStreamReceiver thread has not been started. Skip ...')
-        self.running = False
 
     def start(self):
         self.robot.basic_ctrl.video_stream_on()
@@ -208,37 +208,27 @@ class VideoStreamReceiver(object):
                         "Nothing has been received from VideoStream port. (timeout)")
 
 
-class PushDataReceiver(object):
-    def __init__(self, robot, port=40924):
+class MsgPushReceiver(object):
+    def __init__(self, robot, port=40924, time_out=3):
         self.robot = robot
         self.ip = robot.ip
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.settimeout(1)
         self.log = logger.Logger(self)
-        self.running = False
-        self._receiver_thread = threading.Thread(
-            target=self._receiver_thread_task)
+        # self.running = False
+        # self._receiver_thread = threading.Thread(
+        #     target=self._receiver_thread_task)
 
     def __del__(self):
-        self.log.info("Shuting down PushDataReceiver ...")
-        if self.running:
-            self._receiver_thread.join()
-            self.socket.close()
-            self.log.info(
-                'Shutted down PushDataReceiver thread successfully.')
-        else:
-            self.log.info(
-                'PushDataReceiver thread has not been started. Skip ...')
-        self.running = False
+        self.socket.close()
 
-    @retry(n_retries=3)
     def start(self):
         self.bind()
         self._receiver_thread.start()
         self.log.info('PushDataReceiver thread started.')
-        self.running = True
 
+    @retry(n_retries=3)
     def bind(self):
         self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
         try:
@@ -250,12 +240,11 @@ class PushDataReceiver(object):
             self.log.info("Push port bound.")
             return False
 
-    def _receiver_thread_task(self):
-        while self.running:
-            try:
-                recv = self.socket.recv(4096).decode('utf-8')
-                self.robot.push_buffer.appendleft()
-            except socket.timeout:
-                continue
-            except socket.error as e:
-                self.log.warn("Error at decoding: %s" % e)
+    def receiver_task(self):
+        try:
+            recv = self.socket.recv(4096).decode('utf-8')
+            self.robot.push_buffer.appendleft()
+        except socket.timeout:
+            pass
+        except socket.error as e:
+            self.log.warn("Error at decoding: %s" % e)

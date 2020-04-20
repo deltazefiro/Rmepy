@@ -1,7 +1,7 @@
 from . import logger
 from .decorators import accepts
 
-class CmdPkgTemplate(object):
+class RobotModuleTemplate(object):
     def __init__(self, robot):
         self.send_cmd = robot.send_cmd
         self.send_query = robot.send_query
@@ -23,7 +23,7 @@ class CmdPkgTemplate(object):
         return data
 
 
-class BasicCtrl(CmdPkgTemplate):
+class BasicCtrl(RobotModuleTemplate):
     def __init__(self, robot):
         super().__init__(robot)
 
@@ -126,9 +126,32 @@ class BasicCtrl(CmdPkgTemplate):
         return self.send_cmd('stream off')
 
 
-class Chassis(CmdPkgTemplate):
+class Chassis(RobotModuleTemplate):
     def __init__(self, robot):
         super().__init__(robot)
+
+        # position 底盘当前的位置距离上电时刻位置
+        self.x = 0.0  # x 轴位置(m)
+        self.y = 0.0  # y 轴位置(m)
+        self.z = 0.0  # 偏航角度(°)
+
+        # attitude
+        self.pitch = 0.0
+        self.roll = 0.0
+        self.yaw = 0.0
+
+        # status
+        self.is_static = False  #是否静止
+        self.is_uphill = False  #是否上坡
+        self.is_downhill  = False  #是否下坡
+        self.is_on_slope = False  #是否溜坡
+        self.is_pick_up  = False  #是否被拿起
+        self.is_slip  = False  #是否滑行
+        self.is_impact_x  = False  #x 轴是否感应到撞击
+        self.is_impact_y = False  #y 轴是否感应到撞击
+        self.is_impact_z = False  #z 轴是否感应到撞击
+        self.is_roll_over = False  #是否翻车
+        self.is_hill_static = False #是否在坡上静止
 
     @accepts(speed_x=(float, -3.5, 3.5), speed_y=(float, -3.5, 3.5), speed_yaw=(float, -600, 600))
     def set_vel(self, speed_x, speed_y, speed_yaw):
@@ -313,9 +336,13 @@ class Chassis(CmdPkgTemplate):
 
     # TODO: set_push_freq & data
 
-class Gimbal(CmdPkgTemplate):
+class Gimbal(RobotModuleTemplate):
     def __init__(self, robot):
         super().__init__(robot)
+
+        # attitude
+        self.pitch = 0.0
+        self.yaw = 0.0
 
     @accepts((float, -450, 450), (float, -450, 450))
     def set_speed(self, speed_pitch, speed_yaw):

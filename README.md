@@ -46,13 +46,13 @@ sleep(10)
 
 目前支持的其他命令的详细内容
 
-可以使用 help(rmepy.commends) 或 进入 rmepy/commends.py 查看
+可以使用 help(rmepy.robot_modules) 或 进入 rmepy/robot_modules.py 查看
 
 
 
-### Project structure:
+### Project structure (已过时，待更新):
 
-文件结构
+文件结构(已过时，待更新)
 
 ```
 Rmepy
@@ -78,7 +78,7 @@ Rmepy
 rmepy.Robot
 		# Connection 基本的连接服务
         .CommendSender = connection.CommendSender()
-        .PushDataReceiver = connection.PushDataReceiver()
+        .MsgPushReceiver = connection.MsgPushReceiver()
         
         # Commends 封装的命令
         .basic_ctrl = commends.BasicCtrl()

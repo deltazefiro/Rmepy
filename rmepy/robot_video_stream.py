@@ -15,20 +15,18 @@ import cv2
 import numpy as np
 from PIL import Image as PImage
 
-from . import connection, libh264decoder, logger
+from . import robot_connection, libh264decoder, logger
 from .decorators import retry
 
 
 class RobotVideoStream(object):
     def __init__(self, robot, port=40921, recv_buffer_size=32, display_buffer_size=5, socket_time_out=3):
         self.robot = robot
-        self.ip = robot.ip
-        self.port = port
         self.log = logger.Logger(self)
         self.running = False
         self.display_running = False
 
-        self.video_stream_receiver = connection.VideoStreamReceiver(
+        self.video_stream_receiver = robot_connection.VideoStreamReceiver(
             robot, port=port, time_out=socket_time_out, recv_buffer_size=recv_buffer_size)
         self.recv_buffer = self.video_stream_receiver.recv_buffer
 

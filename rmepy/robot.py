@@ -3,8 +3,8 @@
 
 import queue
 
-from . import commends
-from .connection import CommendSender, PushDataReceiver, VideoStreamReceiver
+from . import robot_modules
+from .robot_connection import CommendSender
 from .logger import Logger
 from .robot_video_stream import RobotVideoStream
 
@@ -21,10 +21,7 @@ class Robot(object):
 
         self.video = RobotVideoStream(self)
 
-        self.PushDataReceiver = PushDataReceiver(self)
-        self.push_buffer = queue.deque(maxlen=10)
-
-        self.basic_ctrl = commends.BasicCtrl(self)
-        self.chassis = commends.Chassis(self)
-        self.gimbal = commends.Gimbal(self)
+        self.basic_ctrl = robot_modules.BasicCtrl(self)
+        self.chassis = robot_modules.Chassis(self)
+        self.gimbal = robot_modules.Gimbal(self)
         self.log = Logger('RMEP(main)')
