@@ -4,8 +4,9 @@
 import queue
 
 from . import robot_modules
-from .robot_connection import CommendSender
 from .logger import Logger
+from .robot_connection import CommendSender
+from .robot_msg_push import RobotMsgPush
 from .robot_video_stream import RobotVideoStream
 
 
@@ -19,9 +20,12 @@ class Robot(object):
         self.send_query = self.CommendSender.send_query
         self.connect = self.CommendSender.connect
 
-        self.video = RobotVideoStream(self)
-
+        # modules (必须在push前申明)
         self.basic_ctrl = robot_modules.BasicCtrl(self)
         self.chassis = robot_modules.Chassis(self)
         self.gimbal = robot_modules.Gimbal(self)
+
+        self.video = RobotVideoStream(self)
+        self.push = RobotMsgPush(self)
+
         self.log = Logger('RMEP(main)')

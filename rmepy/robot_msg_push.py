@@ -1,10 +1,12 @@
 from .robot_connection import MsgPushReceiver
+from . import logger
 import threading
 
 
 class RobotMsgPush(object):
     def __init__(self, robot, port=40924, socket_time_out=3):
         self.robot = robot
+        self.log = logger.Logger(self)
         self.msg_push_receiver = MsgPushReceiver(robot, port, socket_time_out)
         self._receiver_thread = threading.Thread(
             target=self._receiver_thread_task)
@@ -12,9 +14,9 @@ class RobotMsgPush(object):
         self._init_attr_dict()
 
     def __del__(self):
-        self.running = False
         self.log.info("Shuting down MsgPushReceiver thread...")
         if self.running:
+            self.running = False
             self._receiver_thread.join()
             self.log.info(
                 'Shutted down MsgPushReceiver thread successfully.')

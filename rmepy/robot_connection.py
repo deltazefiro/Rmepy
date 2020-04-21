@@ -27,7 +27,7 @@ class CommendSender(object):
         self.log = logger.Logger(self)
 
     def __del__(self):
-        self.log.info("Shuting down CommendSender ...")
+        # self.log.info("Shuting down CommendSender ...")
         # self.socket.shutdown()
         self.socket.close()
 
@@ -151,16 +151,16 @@ class VideoStreamReceiver(object):
             target=self._receiver_thread_task)
 
     def __del__(self):
-        self.running = False
         self.log.info("Shuting down VideoStreamReceiver ...")
-        self.socket.close()
         if self.running:
+            self.running = False
             self._receiver_thread.join()
             self.log.info(
                 'Shutted down VideoStreamReceiver thread successfully.')
         else:
             self.log.info(
                 'VideoStreamReceiver thread has not been started. Skip ...')
+        self.socket.close()
 
     def start(self):
         self.robot.basic_ctrl.video_stream_on()
@@ -214,7 +214,7 @@ class MsgPushReceiver(object):
         self.ip = robot.ip
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.settimeout(1)
+        self.socket.settimeout(time_out)
         self.log = logger.Logger(self)
         # self.running = False
         # self._receiver_thread = threading.Thread(
@@ -235,10 +235,10 @@ class MsgPushReceiver(object):
             self.socket.bind((self.ip, self.port))
         except socket.error as e:
             self.log.warn("Fail to bind Push port. Error: %s" % e)
-            return True
+            return False
         else:
             self.log.info("Push port bound.")
-            return False
+            return True
 
     def receiver_task(self):
         try:
