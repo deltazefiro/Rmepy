@@ -38,23 +38,23 @@ class RobotVideoStream(object):
 
     def __del__(self):
         if self.display_running:
-            self.log.info("Shuting down Display thread ...")
+            self.log.debuginfo("Shuting down Display thread ...")
             self.display_running = False
             self._display_thread.join()
-            self.log.info(
+            self.log.debuginfo(
                 'Shutted down Display thread successfully.')
         else:
-            self.log.info(
+            self.log.debuginfo(
                 'Display thread has not been started. Skip ...')
 
         if self.running:
-            self.log.info("Shuting down VideoDecoder thread ...")
+            self.log.debuginfo("Shuting down VideoDecoder thread ...")
             self.running = False
             self._receiver_thread.join()
-            self.log.info(
+            self.log.debuginfo(
                 'Shutted down VideoDecoder thread successfully.')
         else:
-            self.log.info(
+            self.log.debuginfo(
                 'VideoDecoder thread has not been started. Skip ...')
 
 
@@ -75,7 +75,7 @@ class RobotVideoStream(object):
             try:
                 buff = self.recv_buffer.pop()
             except IndexError:
-                self.log.warn("recv_buffer empty.")
+                self.log.debuginfo("recv_buffer empty.")
                 continue
             else:
                 package_data += buff

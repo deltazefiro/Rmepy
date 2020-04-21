@@ -5,6 +5,7 @@ rm.connect()
 rm.basic_ctrl.enter_sdk_mode()
 
 
+# rm.push.start()
 rm.basic_ctrl.set_robot_mode(2)
 rm.chassis.set_vel(1., 2., 3.)
 print(rm.chassis.get_postion())

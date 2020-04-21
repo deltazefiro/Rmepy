@@ -14,19 +14,20 @@ class RobotMsgPush(object):
         self._init_attr_dict()
 
     def __del__(self):
-        self.log.info("Shuting down MsgPushReceiver thread...")
+        self.log.debuginfo("Shuting down MsgPushReceiver thread...")
         if self.running:
             self.running = False
             self._receiver_thread.join()
-            self.log.info(
+            self.log.debuginfo(
                 'Shutted down MsgPushReceiver thread successfully.')
         else:
-            self.log.info(
+            self.log.debuginfo(
                 'MsgPushReceiver thread has not been started. Skip ...')
 
     def start(self):
         self.msg_push_receiver.bind()
         self._receiver_thread.start()
+        self.log.info("MsgPushReceiver thread started.")
 
     def _receiver_thread_task(self):
         self.running = True

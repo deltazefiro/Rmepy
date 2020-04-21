@@ -27,7 +27,7 @@ class CommendSender(object):
         self.log = logger.Logger(self)
 
     def __del__(self):
-        # self.log.info("Shuting down CommendSender ...")
+        self.log.debuginfo("Shuting down CommendSender ...")
         # self.socket.shutdown()
         self.socket.close()
 
@@ -45,7 +45,7 @@ class CommendSender(object):
             None: (None) 用于适配修饰器
 
         """
-        self.log.info("Connecting to %s:%s ..." % (self.ip, self.port))
+        self.log.debuginfo("Connecting to %s:%s ..." % (self.ip, self.port))
 
         try:
             self.socket.connect((self.ip, self.port))
@@ -151,14 +151,14 @@ class VideoStreamReceiver(object):
             target=self._receiver_thread_task)
 
     def __del__(self):
-        self.log.info("Shuting down VideoStreamReceiver ...")
+        self.log.debuginfo("Shuting down VideoStreamReceiver ...")
         if self.running:
             self.running = False
             self._receiver_thread.join()
-            self.log.info(
+            self.log.debuginfo(
                 'Shutted down VideoStreamReceiver thread successfully.')
         else:
-            self.log.info(
+            self.log.debuginfo(
                 'VideoStreamReceiver thread has not been started. Skip ...')
         self.socket.close()
 
@@ -172,14 +172,14 @@ class VideoStreamReceiver(object):
 
     @retry(n_retries=3)
     def bind(self):
-        self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
+        self.log.debuginfo("Binding to %s:%s ..." % (self.ip, self.port))
         try:
             self.socket.bind((self.ip, self.port))
         except socket.error as e:
             self.log.error("Fail to bind VideoStream port. Error: %s" % e)
             return False
         else:
-            self.log.info("VideoStream port bound.")
+            self.log.debuginfo("VideoStream port bound.")
             return True
 
     @retry(n_retries=3)
@@ -230,7 +230,7 @@ class MsgPushReceiver(object):
 
     @retry(n_retries=3)
     def bind(self):
-        self.log.info("Binding to %s:%s ..." % (self.ip, self.port))
+        self.log.debuginfo("Binding to %s:%s ..." % (self.ip, self.port))
         try:
             self.socket.bind((self.ip, self.port))
         except socket.error as e:
