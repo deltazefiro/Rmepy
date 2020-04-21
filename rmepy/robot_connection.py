@@ -223,10 +223,10 @@ class MsgPushReceiver(object):
     def __del__(self):
         self.socket.close()
 
-    def start(self):
-        self.bind()
-        self._receiver_thread.start()
-        self.log.info('PushDataReceiver thread started.')
+    # def start(self):
+    #     self.bind()
+    #     # self._receiver_thread.start()
+    #     self.log.info('PushDataReceiver thread started.')
 
     @retry(n_retries=3)
     def bind(self):
@@ -242,9 +242,10 @@ class MsgPushReceiver(object):
 
     def receiver_task(self):
         try:
-            recv = self.socket.recv(4096).decode('utf-8')
-            self.robot.push_buffer.appendleft()
+            return self.socket.recv(4096).decode('utf-8')
+            # self.robot.push_buffer.appendleft()
         except socket.timeout:
-            pass
+            return None
         except socket.error as e:
-            self.log.warn("Error at decoding: %s" % e)
+            self.log.error("Error at decoding: %s" % e)
+            return None
