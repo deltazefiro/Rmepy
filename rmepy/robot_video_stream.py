@@ -15,7 +15,8 @@ import cv2
 import numpy as np
 from PIL import Image as PImage
 
-from . import robot_connection, libh264decoder, logger
+from . import robot_connection, logger
+from .decoders import libh264decoder
 from .decorators import retry
 
 
