@@ -12,10 +12,10 @@ def retry(n_retries=3, retry_interval=1):
         @functools.wraps(func)
         def new_func(*args, **kwargs):
 
-            if func.__code__.co_varnames[0] == 'self' and args[0].log == logger.Logger:
+            if func.__code__.co_varnames[0] == 'self' and type(args[0].log) == logger.Logger:
                 log = args[0].log
             else:
-                log = logger.Logger('Accept check')
+                log = logger.Logger('Retry')
 
             retry = 0
             while retry < n_retries:
@@ -100,7 +100,7 @@ def retry(n_retries=3, retry_interval=1):
 #     return decorator
 
 
-def accepts(*exp_args, **exp_kwargs):
+def accepts(*expc_args, **expc_kwargs):
     """对输入变量进行类型检测和范围检查
 
      Inspired by  https://python3-cookbook.readthedocs.io/zh_CN/latest/c09/p07_enforcing_type_check_on_function_using_decorator.html
@@ -109,8 +109,6 @@ def accepts(*exp_args, **exp_kwargs):
          @accepts((int, 0, 20), arg2=(float, 0.0, 30.0))
          def func(arg1, arg2):
              pass
-
-     TODO: float 与 int 的自动转换
 
      """
     def decorate(func):
@@ -123,14 +121,14 @@ def accepts(*exp_args, **exp_kwargs):
 
         sig = signature(func)
         if is_func_in_class:
-            bound_exps = sig.bind_partial(None, *exp_args, **exp_kwargs).arguments
+            bound_expc = sig.bind_partial(None, *expc_args, **expc_kwargs).arguments
         else:
-            bound_exps = sig.bind_partial(*exp_args, **exp_kwargs).arguments
+            bound_expc = sig.bind_partial(*expc_args, **expc_kwargs).arguments
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
 
-            if is_func_in_class and type(args[0].log == logger.Logger):
+            if is_func_in_class and type(args[0].log) == logger.Logger:
                 log = args[0].log
             else:
                 log = logger.Logger('Acceptable check')
@@ -138,19 +136,34 @@ def accepts(*exp_args, **exp_kwargs):
             bound_values = sig.bind(*args, **kwargs).arguments
             
             for key, value in bound_values.items():
-                if key in bound_exps and key != 'self':
+                if key in bound_expc and key != 'self':
 
-                    expectation = bound_exps[key]
+                    expectation = bound_expc[key]
 
                     if type(expectation) == type:
-                        if not isinstance(value, expectation):
-                            log.error("%s: Arguments '%s'=%r does not match %s" % (
-                                func_name, key, value, expectation))
+                        bound_values[key] = _type_transform(value, expectation)
+                        if not bound_values[key]:
+                            log.error("%s: Arguments '%s' expects %s, but got %r" % (
+                                func_name, key, expectation, value))
 
-                    elif not (isinstance(value, expectation[0]) and expectation[1] <= value <= expectation[2]):
-                        log.error("%s: Arguments '%s' expects %s from %s to %s, but got %r" % (
-                            func_name, key, expectation[0], expectation[1], expectation[2], value))
+                    else:
+                        bound_values[key] = _type_transform(value, expectation[0])
+                        if not bound_values[key] or not expectation[1] <= value <= expectation[2]:
+                            log.error("%s: Arguments '%s' expects %s from %s to %s, but got %r" % (
+                                func_name, key, expectation[0], expectation[1], expectation[2], value))
 
-            return func(*args, **kwargs)
+            return func(**bound_values)
         return wrapper
     return decorate
+
+def _type_transform(value, expc_type):
+    if expc_type == bool and type(value) == int:
+        return int(value) # True/False -> 1/0
+    if isinstance(value, expc_type):
+        return value
+    elif expc_type == float and type(value) == int:
+        return float(value)
+    elif expc_type == str:
+        return str(value)
+    else:
+        return None
