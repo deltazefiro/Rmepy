@@ -26,7 +26,7 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python接口，目标是还原�
 import rmepy
 from time import sleep
 
-rm = rmepy.Robot()
+rm = rmepy.Robot(ip='127.0.0.1')
 rm.connect()
 rm.basic_ctrl.enter_sdk_mode()
 sleep(1)
@@ -36,6 +36,12 @@ sleep(1)
 rm.chassis.set_vel(0.0, 0.0, 0.0)
 print(rm.chassis.get_postion())
 print(rm.chassis.get_all_speed())
+
+rm.push.start()
+rm.gimbal.set_push(atti_freq=5)
+sleep(0.5)
+print(rm.gimbal.pitch, rm.gimbal.yaw)
+
 rm.video.start()
 sleep(1)
 rm.video.display()
@@ -84,6 +90,7 @@ rmepy.Robot
         .basic_ctrl = commends.BasicCtrl()
         .chassis = commends.Chassis()
         .gimbal = commends.Gimbal()
+        .blaster = robot_modules.Blaster()
         
         # Video 基础视频模块
         .video = robot_video_stream.RobotVideoStream()

@@ -237,7 +237,7 @@ class MsgPushReceiver(object):
             self.log.warn("Fail to bind Push port. Error: %s" % e)
             return False
         else:
-            self.log.info("Push port bound.")
+            self.log.debuginfo("Push port bound.")
             return True
 
     def receiver_task(self):

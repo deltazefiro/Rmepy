@@ -142,13 +142,13 @@ def accepts(*expc_args, **expc_kwargs):
 
                     if type(expectation) == type:
                         bound_values[key] = _type_transform(value, expectation)
-                        if not bound_values[key]:
+                        if bound_values[key] == None:
                             log.error("%s: Arguments '%s' expects %s, but got %r" % (
                                 func_name, key, expectation, value))
 
                     else:
                         bound_values[key] = _type_transform(value, expectation[0])
-                        if not bound_values[key] or not expectation[1] <= value <= expectation[2]:
+                        if bound_values[key] == None or not expectation[1] <= value <= expectation[2]:
                             log.error("%s: Arguments '%s' expects %s from %s to %s, but got %r" % (
                                 func_name, key, expectation[0], expectation[1], expectation[2], value))
 
