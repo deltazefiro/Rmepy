@@ -121,4 +121,33 @@ class Gimbal(RobotModuleTemplate):
         response = self.send_query('gimbal attitude ?')
         return self._process_response(response, int)
     
-    # TODO push msg ctrl
+    def set_push(self, atti_freq):
+        """底盘信息推送控制
+        
+        打开/关闭底盘中相应属性的信息推送与频率设置
+        若已使用 Robot.push.start 激活推送接收器
+        可以直接从 Robot.chassis.[属性名] 获取推送信息
+
+        Args:
+            支持的频率 1, 5, 10, 20, 30, 50
+            频率为 0 则关闭该属性推送
+            若输入为 None 则不改变该属性的推送评论
+
+            pos_freq (int/None)
+            atti_freq (int/None)
+            status_freq (int/None)
+        
+        Returns:
+            None
+        
+        """
+
+        cmd = 'gimbal push'
+        if atti_freq == 0:
+            cmd += ' attitude off'
+        elif atti_freq in (1, 5, 10, 20, 30, 50):
+            cmd += ' attitude on afreq %d' %atti_freq
+        else:
+            self.log.error("set_push: 'atti_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %atti_freq)
+
+        return self.send_cmd(cmd)

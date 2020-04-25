@@ -209,4 +209,57 @@ class Chassis(RobotModuleTemplate):
         response = self.send_query('chassis status ?')
         return self._process_response(response, bool)
 
-    # TODO: set_push_freq & data
+    def set_push(self, pos_freq=None, atti_freq=None, status_freq=None):
+        """底盘信息推送控制
+        
+        打开/关闭底盘中相应属性的信息推送与频率设置
+        若已使用 Robot.push.start 激活推送接收器
+        可以直接从 Robot.chassis.[属性名] 获取推送信息
+
+        Args:
+            支持的频率 1, 5, 10, 20, 30, 50
+            频率为 0 则关闭该属性推送
+            若输入为 None 则不改变该属性的推送评论
+
+            pos_freq (int/None)
+            atti_freq (int/None)
+            status_freq (int/None)
+        
+        Returns:
+            None
+        
+        """
+
+        if pos_freq == atti_freq == status_freq == None:
+            self.log.warn("set_push: got 3 None args." )
+            return False
+        else:
+            cmd = 'chassis push'
+            if pos_freq == None:
+                pass
+            elif pos_freq == 0:
+                cmd += ' position off'
+            elif pos_freq in (1, 5, 10, 20, 30, 50):
+                cmd += ' position on pfreq %d' %pos_freq
+            else:
+                self.log.error("set_push: 'pos_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %pos_freq)
+            
+            if atti_freq == None:
+                pass
+            elif atti_freq == 0:
+                cmd += ' attitude off'
+            elif atti_freq in (1, 5, 10, 20, 30, 50):
+                cmd += ' attitude on afreq %d' %atti_freq
+            else:
+                self.log.error("set_push: 'atti_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %atti_freq)
+
+            if status_freq == None:
+                pass
+            elif status_freq == 0:
+                cmd += ' status off'
+            elif status_freq in (1, 5, 10, 20, 30, 50):
+                cmd += ' status on sfreq %d' %status_freq
+            else:
+                self.log.error("set_push: 'status_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %status_freq)
+
+            return self.send_cmd(cmd)

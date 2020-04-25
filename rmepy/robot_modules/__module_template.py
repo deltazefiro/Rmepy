@@ -1,10 +1,11 @@
+import traceback
 from .. import logger
 
 class RobotModuleTemplate(object):
     def __init__(self, robot):
         self.send_cmd = robot.send_cmd
         self.send_query = robot.send_query
-        self.log = logger.Logger('Commends')
+        self.log = logger.Logger(self)
 
     def _process_response(self, data, type_list):
         try:
@@ -17,6 +18,6 @@ class RobotModuleTemplate(object):
                         for i in data]
         except (TypeError, ValueError) as e:
             self.log.error(
-                "Error at processing response: %s does not match %s" % (data, type_list))
+                "%s: Error at processing response: %s does not match %s" % (traceback.extract_stack()[-2][2], data, type_list))
             data = None
         return data

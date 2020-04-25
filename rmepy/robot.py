@@ -20,10 +20,11 @@ class Robot(object):
         self.send_query = self.CommendSender.send_query
         self.connect = self.CommendSender.connect
 
-        # modules (必须在push前申明)
+        # modules (NOTE robot_modules必须在push前申明)
         self.basic_ctrl = robot_modules.BasicCtrl(self)
         self.chassis = robot_modules.Chassis(self)
         self.gimbal = robot_modules.Gimbal(self)
+        self.blaster = robot_modules.Blaster(self)
 
         self.video = RobotVideoStream(self)
         self.push = RobotMsgPush(self)
