@@ -2,6 +2,8 @@ import rmepy
 from time import sleep
 
 rm = rmepy.Robot(ip='127.0.0.1')
+rm.connection.start()
+sleep(1000)
 # rm.connect()
 # rm.basic_ctrl.enter_sdk_mode()
 # sleep(1)
@@ -12,13 +14,13 @@ rm = rmepy.Robot(ip='127.0.0.1')
 # print(rm.chassis.get_postion())
 # print(rm.chassis.get_all_speed())
 
-rm.push.start()
+# rm.push.start()
 # rm.gimbal.set_push(atti_freq=5)
 # sleep(0.5)
-while 1:
-    print(rm.gimbal.pitch, rm.gimbal.yaw)
-    print(rm.chassis.pitch, rm.chassis.roll, rm.chassis.yaw)
-    sleep(1)
+# while 1:
+    # print(rm.gimbal.pitch, rm.gimbal.yaw)
+    # print(rm.chassis.pitch, rm.chassis.roll, rm.chassis.yaw)
+    # sleep(1)
 
 # rm.video.start()
 # sleep(1)

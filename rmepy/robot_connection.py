@@ -4,7 +4,7 @@ import select
 import queue
 
 from . import logger
-from .decoders import retry
+from .decorators import retry
 
 
 class RobotConnection(object):
@@ -31,7 +31,7 @@ class RobotConnection(object):
         self.push_socket.bind((robot_ip, RobotConnection.PUSH_PORT))
         self.ip_socket.bind(('', RobotConnection.IP_PORT))
 
-        self.socket_list = [self.ctrl_socket, self.push_socket, self.event_socket]
+        self.socket_list = []#[self.push_socket, self.event_socket]
         self.socket_msg_queue = {
             self.video_socket: queue.deque(maxlen=32),
             self.audio_socket: queue.deque(maxlen=32),
@@ -43,6 +43,9 @@ class RobotConnection(object):
 
         self.running = False
         self.log = logger.Logger(self)
+
+    def __del__(self):
+        self.running = False
 
     def update_robot_ip(self, robot_ip):
         """
@@ -85,7 +88,7 @@ class RobotConnection(object):
 
         try:
             self.ctrl_socket.connect((self.robot_ip, RobotConnection.CTRL_PORT))
-            self.event_socket.connect((self.robot_ip, RobotConnection.EVENT_PORT))
+            # self.event_socket.connect((self.robot_ip, RobotConnection.EVENT_PORT))
         except Exception as e:
             self.log.warn('Connection failed, the reason is %s' %e)
             return False
@@ -208,7 +211,7 @@ class RobotConnection(object):
             return None
         
     def __socket_recv_task(self):
-        while not self.is_shutdown:
+        while self.running:
             rlist, _, _  = select.select(self.socket_list, [], [], 2)
 
             for s in rlist:
