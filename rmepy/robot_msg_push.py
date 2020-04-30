@@ -1,4 +1,3 @@
-from .robot_connection import MsgPushReceiver
 from . import logger
 import threading
 
@@ -20,24 +19,12 @@ class RobotMsgPush(object):
         print(rm.chassis.x, rm.chassis.y, rm.chassis.z)     # 调取使用底盘位置信息
 
     """
-    def __init__(self, robot, port=40924, socket_time_out=3):
+    def __init__(self, robot):
         self.robot = robot
         self.log = logger.Logger(self)
-        self.msg_push_receiver = MsgPushReceiver(robot, port, socket_time_out)
-        self._receiver_thread = threading.Thread(
-            target=self._receiver_thread_task)
+        self.get_push_data = robot.connection.get_push_data
+        self._receiver_thread = threading.Thread(target=self._receiver_task)
         self.running = False
-
-    def __del__(self):
-        self.log.debuginfo("Shuting down MsgPushReceiver thread...")
-        if self.running:
-            self.running = False
-            self._receiver_thread.join()
-            self.log.debuginfo(
-                'Shutted down MsgPushReceiver thread successfully.')
-        else:
-            self.log.debuginfo(
-                'MsgPushReceiver thread has not been started. Skip ...')
 
     def start(self):
         """ 启动 信息推送接收器
@@ -49,11 +36,10 @@ class RobotMsgPush(object):
             None
 
         """
-        self.msg_push_receiver.bind()
         self._receiver_thread.start()
         self.log.info("MsgPushReceiver thread started.")
 
-    def _receiver_thread_task(self):
+    def _receiver_task(self):
         """信息接收&处理线程
 
         Args:
@@ -64,11 +50,15 @@ class RobotMsgPush(object):
 
         """
         self.running = True
-        while self.running:
-            msg = self.msg_push_receiver.receiver_task()
+        while self.running and threading.main_thread().is_alive():
+            msg = self.get_push_data()
             if msg:
+                self.log.debug(msg)
                 module_name, _, attr, *values = msg.split()
                 self._process_msg_push(module_name, attr, values)
+        
+        self.log.debuginfo('Shutted down RobotMsgPush thread successfully.')
+        self.running = False
 
     def _process_type(self, data, type_list):
         """ 将字符串类型的数据处理成指定类型的数据
