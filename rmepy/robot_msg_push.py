@@ -26,15 +26,6 @@ class RobotMsgPush(object):
         self._receiver_thread = threading.Thread(target=self._receiver_task)
         self.running = False
 
-    def __del__(self):
-        self.log.debuginfo("Shuting down MsgPushReceiver thread...")
-        if self.running:
-            self.running = False
-            self._receiver_thread.join()
-            self.log.debuginfo('Shutted down MsgPushReceiver thread successfully.')
-        else:
-            self.log.debuginfo('MsgPushReceiver thread has not been started. Skip ...')
-
     def start(self):
         """ 启动 信息推送接收器
 
@@ -59,12 +50,15 @@ class RobotMsgPush(object):
 
         """
         self.running = True
-        while self.running:
+        while self.running and threading.main_thread().is_alive():
             msg = self.get_push_data()
             if msg:
                 self.log.debug(msg)
                 module_name, _, attr, *values = msg.split()
                 self._process_msg_push(module_name, attr, values)
+        
+        self.log.debuginfo('Shutted down RobotMsgPush thread successfully.')
+        self.running = False
 
     def _process_type(self, data, type_list):
         """ 将字符串类型的数据处理成指定类型的数据

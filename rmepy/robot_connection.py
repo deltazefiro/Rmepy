@@ -20,6 +20,8 @@ class RobotConnection(object):
 
     def __init__(self, robot_ip='192.168.2.1'):
         self.robot_ip = robot_ip
+        self.running = False
+        self.log = logger.Logger(self)
 
         self.video_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.audio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,25 +30,27 @@ class RobotConnection(object):
         self.event_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ip_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.push_socket.bind((robot_ip, RobotConnection.PUSH_PORT))
-        self.ip_socket.bind(('', RobotConnection.IP_PORT))
+        try:
+            self.push_socket.bind((robot_ip, RobotConnection.PUSH_PORT))
+            self.ip_socket.bind(('', RobotConnection.IP_PORT))
+        except OSError as e:
+            self.log.error('Error when binding ports: %s' %e)
 
-        self.socket_list = [self.push_socket]#[self.push_socket, self.event_socket]
+        self.socket_list = [self.push_socket, self.event_socket]
         self.socket_msg_queue = {
             self.video_socket: queue.deque(maxlen=32),
             self.audio_socket: queue.deque(maxlen=32),
-            # self.ctrl_socket: queue.Queue(16),
             self.push_socket: queue.deque(maxlen=16),
             self.event_socket: queue.deque(maxlen=16)
         }
-        self.socket_recv_thread = threading.Thread(target=self.__socket_recv_task)
-
-        self.running = False
-        self.log = logger.Logger(self)
+        self.socket_recv_thread = threading.Thread(target=self._socket_recv_task)
 
     def __del__(self):
-        self.running = False
-        self.socket_recv_thread.join()
+        for s in self.socket_list:
+            try:
+                s.shutdown(socket.SHUT_RDWR)
+            except Exception as e:
+                pass
 
     def update_robot_ip(self, robot_ip):
         """
@@ -57,7 +61,7 @@ class RobotConnection(object):
     @retry(n_retries=10)
     def get_robot_ip(self, timeout=None):
         """
-        Get the robot ip from ip broadcat port
+        Get the robot ip from ip broadcast port
 
         If optional arg 'timeout' is None (the default), block if necessary until
         get robot ip from broadcast port. If 'timeout' is a non-negative number,
@@ -89,7 +93,7 @@ class RobotConnection(object):
 
         try:
             self.ctrl_socket.connect((self.robot_ip, RobotConnection.CTRL_PORT))
-            # self.event_socket.connect((self.robot_ip, RobotConnection.EVENT_PORT))
+            self.event_socket.connect((self.robot_ip, RobotConnection.EVENT_PORT))
         except Exception as e:
             self.log.warn('Connection failed: %s' %e)
             return False
@@ -108,7 +112,7 @@ class RobotConnection(object):
             try:
                 self.video_socket.connect((self.robot_ip, RobotConnection.VIDEO_PORT))
             except Exception as e:
-                self.log.warn('Connection failed: %s'%e)
+                self.log.warn('Video connection failed: %s'%e)
                 return False
             self.socket_list.append(self.video_socket)
         return True
@@ -127,7 +131,7 @@ class RobotConnection(object):
             try:
                 self.audio_socket.connect((self.robot_ip, RobotConnection.AUDIO_PORT))
             except Exception as e:
-                self.log.warn('Connection failed:  %s'%e)
+                self.log.warn('Audio connection failed:  %s'%e)
                 return False
             self.socket_list.append(self.audio_socket)
         return True
@@ -211,32 +215,32 @@ class RobotConnection(object):
 
     def get_video_data(self, latest_data=False):
         """
-        Receive control data
+        Get video data from received msg queue
 
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
 
         """
-        return self.__get_received_data(self.video_socket, latest_data)
+        return self._get_received_data(self.video_socket, latest_data)
 
     def get_audio_data(self, latest_data=False):
         """
-        Receive control data
+        Get audio data from received msg queue
 
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
 
         """
-        return self.__get_received_data(self.audio_socket, latest_data)
+        return self._get_received_data(self.audio_socket, latest_data)
 
     def get_push_data(self, latest_data=False):
         """
-        Receive push data
+        Get push msg from received msg queue
 
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
         """
-        data =  self.__get_received_data(self.push_socket, latest_data)
+        data =  self._get_received_data(self.push_socket, latest_data)
         if data:
             return data.decode('utf-8')
         else:
@@ -244,18 +248,18 @@ class RobotConnection(object):
 
     def get_event_data(self, latest_data=False):
         """
-        Receive event data
+        Get event data from received msg queue
 
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
         """
-        data = self.__get_received_data(self.event_socket, latest_data)
+        data = self._get_received_data(self.event_socket, latest_data)
         if data:
             return data.decode('utf-8')
         else:
             return None
 
-    def __get_received_data(self, socket_obj, latest_data):
+    def _get_received_data(self, socket_obj, latest_data):
         if not self.running:
             self.log.error("socket_recv_thread is not running. Try robot_connection.start().")
         if not socket_obj in self.socket_list:
@@ -269,16 +273,13 @@ class RobotConnection(object):
             # self.log.debuginfo("Msg queue is empty.")
             return None
         
-    def __socket_recv_task(self):
-        while self.running:
+    def _socket_recv_task(self):
+        while self.running and threading.main_thread().is_alive():
             rlist, _, _  = select.select(self.socket_list, [], [], 2)
 
             for s in rlist:
                 msg, addr = s.recvfrom(4096)
                 self.socket_msg_queue[s].appendleft(msg)
-
-        for s in self.socket_list:
-            try:
-                s.shutdown(socket.SHUT_RDWR)
-            except Exception as e:
-                pass
+        
+        self.log.debuginfo('Shutted down SocketRecv thread successfully.')
+        self.running = False
