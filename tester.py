@@ -12,6 +12,10 @@ msg = ['OK', 'OK', 'OK', '12dafd 1234', '12 1324 1223', 'OK', '123421 123 11 11'
 
 log = logger.Logger('Tester')
 
+# cmd_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# cmd_s.bind((HOST, PORT))
+# cmd_s.listen()
+# conn, addr = cmd_s.accept()
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
@@ -30,11 +34,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 conn.send(random.choice(msg).encode('utf-8'))
 
 # data = ('gimbal push attitude 20 10', 'chassis push attitude 0.1 1 3')
-# s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# while True:
-#     # 发送数据:
-#     input('Enter ...')
-#     s.sendto(random.choice(data).encode('utf-8'), ('127.0.0.1', 40924))ttitude 0.1 1 3')
 # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # while True:
 #     # 发送数据:

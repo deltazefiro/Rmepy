@@ -19,7 +19,7 @@ class Logger():
         Returns:
             None
         """
-        print("\033[0;36m" + "[Info][%s]%s: %s" % (self.name, traceback.extract_stack()[-2][2], msg) + "\033[0m")
+        print("\033[0;36m" + "[Info]%s: %s" % (self.name, msg) + "\033[0m")
 
     def warn(self, msg):
         """Print warnings.
@@ -30,7 +30,7 @@ class Logger():
         Returns:
             None
         """
-        print("\033[33m" + "[Warning][%s]%s: %s" % (self.name, traceback.extract_stack()[-2][2], msg) + "\033[0m")
+        print("\033[33m" + "[Warning]%s: %s" % (self.name, msg) + "\033[0m")
 
     def error(self, msg):
         """Print errors.
@@ -44,7 +44,7 @@ class Logger():
             None
         """
         print("=============================================")
-        print("\033[0;31m" + "[Error][%s]%s: %s" % (self.name, traceback.extract_stack()[-2][2], msg) + "\033[0m")
+        print("\033[0;31m" + "[Error]%s: %s" % (self.name, msg) + "\033[0m")
         temp = input("Force to continue? ('y' to continue / 'n' to print Traceback) ")
         print("=============================================")
         if temp.upper() != 'Y':

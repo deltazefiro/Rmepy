@@ -31,7 +31,7 @@ class RobotConnection(object):
         self.push_socket.bind((robot_ip, RobotConnection.PUSH_PORT))
         self.ip_socket.bind(('', RobotConnection.IP_PORT))
 
-        self.socket_list = []#[self.push_socket, self.event_socket]
+        self.socket_list = [self.push_socket]#[self.push_socket, self.event_socket]
         self.socket_msg_queue = {
             self.video_socket: queue.deque(maxlen=32),
             self.audio_socket: queue.deque(maxlen=32),
@@ -46,6 +46,7 @@ class RobotConnection(object):
 
     def __del__(self):
         self.running = False
+        self.socket_recv_thread.join()
 
     def update_robot_ip(self, robot_ip):
         """
@@ -90,7 +91,7 @@ class RobotConnection(object):
             self.ctrl_socket.connect((self.robot_ip, RobotConnection.CTRL_PORT))
             # self.event_socket.connect((self.robot_ip, RobotConnection.EVENT_PORT))
         except Exception as e:
-            self.log.warn('Connection failed, the reason is %s' %e)
+            self.log.warn('Connection failed: %s' %e)
             return False
         else:
             self.running = True
@@ -107,7 +108,7 @@ class RobotConnection(object):
             try:
                 self.video_socket.connect((self.robot_ip, RobotConnection.VIDEO_PORT))
             except Exception as e:
-                self.log.warn('Connection failed, the reason is %s'%e)
+                self.log.warn('Connection failed: %s'%e)
                 return False
             self.socket_list.append(self.video_socket)
         return True
@@ -126,7 +127,7 @@ class RobotConnection(object):
             try:
                 self.audio_socket.connect((self.robot_ip, RobotConnection.AUDIO_PORT))
             except Exception as e:
-                self.log.warn('Connection failed, the reason is %s'%e)
+                self.log.warn('Connection failed:  %s'%e)
                 return False
             self.socket_list.append(self.audio_socket)
         return True
@@ -136,13 +137,13 @@ class RobotConnection(object):
             self.socket_list.remove(self.audio_socket)
         return True
 
-    @retry()
     def send_msg(self, msg):
         """
         Send msg to control port.
         """
         if not self.running:
             self.log.error("Connection invalid. Try robot_connection.start().")
+            return False, None
 
         try:
             self.ctrl_socket.sendall(msg.encode('utf-8'))
@@ -155,8 +156,58 @@ class RobotConnection(object):
         except socket.error as e:
             self.log.error("Error at receving the response of '%s': %s" % (msg, e))
             return False, None
-
+        
         return True, recv.decode('utf-8')
+
+    @retry(n_retries=3)
+    def send_cmd(self, cmd):
+        """Send a commend which does not require returns.
+
+        向s1发送一个不需要返回值的命令
+        即若执行成功s1只返回'OK'的命令，如 'connect' 命令
+
+        Args:
+            cmd: (str) 命令
+
+        Returns:
+            (succ: (bool) 是否成功，被修饰器使用)
+            None
+        """
+        succ, response = self.send_msg(cmd)
+        if succ:
+            if response == 'OK':
+                self.log.info("'%s' recevied 'OK'." % cmd)
+                return True
+            elif response == '':
+                self.log.warn("Got null response of '%s'." % cmd)
+            else:
+                self.log.warn("Received an error when executing '%s': %s" % (cmd, response))
+        return False
+
+    @retry(n_retries=3)
+    def send_query(self, cmd):
+        """Send a commend which requires returns.
+
+        向s1发送一个询问性的（需要返回值的）命令
+        即所以以'?'结尾的命令，如 'robot mode ?' 命令
+
+        Args:
+            cmd: (str) 命令
+
+        Returns:
+            (succ: (bool) 是否成功，被修饰器使用)
+            response: (str) 来自s1的返回值
+        """
+        succ, response = self.send_msg(cmd)
+
+        if succ:
+            if response == '':
+                self.log.warn("Got null response of '%s'." % cmd)
+            else:
+                self.log.info("'%s' received '%s'." % (cmd, response))
+                return True, response
+
+        return False, None
 
     def get_video_data(self, latest_data=False):
         """
@@ -185,7 +236,11 @@ class RobotConnection(object):
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
         """
-        return self.__get_received_data(self.push_socket, latest_data)
+        data =  self.__get_received_data(self.push_socket, latest_data)
+        if data:
+            return data.decode('utf-8')
+        else:
+            return None
 
     def get_event_data(self, latest_data=False):
         """
@@ -194,8 +249,12 @@ class RobotConnection(object):
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
         """
-        return self.__get_received_data(self.event_socket, latest_data)
-        
+        data = self.__get_received_data(self.event_socket, latest_data)
+        if data:
+            return data.decode('utf-8')
+        else:
+            return None
+
     def __get_received_data(self, socket_obj, latest_data):
         if not self.running:
             self.log.error("socket_recv_thread is not running. Try robot_connection.start().")
@@ -207,7 +266,7 @@ class RobotConnection(object):
                 return self.socket_msg_queue[socket_obj][-1]
             return self.socket_msg_queue[socket_obj].pop()
         except Exception as e:
-            self.log.warn("Msg queue is empty.")
+            # self.log.debuginfo("Msg queue is empty.")
             return None
         
     def __socket_recv_task(self):
@@ -223,62 +282,3 @@ class RobotConnection(object):
                 s.shutdown(socket.SHUT_RDWR)
             except Exception as e:
                 pass
-
-
-# def test():
-#     """
-#     Test funciton
-
-#     Connect robot and query the version 
-#     """
-#     robot = RobotConnection('192.168.42.2')
-#     robot.start()
-
-#     robot.send_data('command')
-#     print('send data to robot   : command')
-#     recv = robot.recv_ctrl_data(5)
-#     print('recv data from robot : %s'%recv)
-
-#     robot.send_data('version')
-#     print('send data to robot   : version ?')
-#     recv = robot.recv_ctrl_data(5)
-#     print('recv data from robot : %s'%recv)
-
-#     robot.send_data('stream on')
-#     print('send data to robot   : stream on')
-#     recv = robot.recv_ctrl_data(5)
-#     print('recv data from robot : %s'%recv)
-#     result = robot.start_video_recv()
-#     if result:
-#         stream_data = robot.recv_video_data(5)
-#         print('recv video data from robot %s'%stream_data)
-#         robot.stop_video_recv()
-#     robot.send_data('stream off')
-#     print('send data to robot   : stream off')
-#     recv = robot.recv_ctrl_data(5)
-#     print('recv data from robot : %s'%recv)
-
-#     robot.send_data('audio on')
-#     print('send data to robot   : audio on')
-#     recv = robot.recv_ctrl_data(5)
-#     print('recv data from robot : %s'%recv)
-#     result = robot.start_audio_recv()
-#     if result:
-#         stream_data = robot.recv_audio_data(5)
-#         print('recv audio data from robot %s'%stream_data)
-#         robot.stop_audio_recv()
-#     robot.send_data('audio off')
-#     print('send data to robot   : audio off')
-#     recv = robot.recv_ctrl_data(5)
-#     print('recv data from robot : %s'%recv)
-
-#     robot.send_data('quit')
-#     print('send data to robot   : quit')
-#     recv = robot.recv_ctrl_data(5)
-#     print('recv data from robot : %s'%recv)
-
-#     robot.close()
-
-
-# if __name__ == '__main__':
-#     test()
