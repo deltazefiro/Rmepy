@@ -29,7 +29,7 @@ class Chassis(RobotModuleTemplate):
         self.is_hill_static = False #是否在坡上静止
 
     @accepts(speed_x=(float, -3.5, 3.5), speed_y=(float, -3.5, 3.5), speed_yaw=(float, -600, 600))
-    def set_vel(self, speed_x, speed_y, speed_yaw):
+    def set_speed(self, speed_x, speed_y, speed_yaw):
         """底盘运动速度控制
 
         控制底盘运动速度
@@ -43,7 +43,7 @@ class Chassis(RobotModuleTemplate):
             None
 
         """
-        return self.send_cmd('chassis speed x %f y %f z %f' % (speed_x, speed_y, speed_yaw))
+        return self._send_cmd('chassis speed x %f y %f z %f' % (speed_x, speed_y, speed_yaw))
 
     @accepts((int, -1000, 1000), (int, -1000, 1000), (int, -1000, 1000), (int, -1000, 1000))
     def set_wheel_speed(self, speed_w1, speed_w2, speed_w3, speed_w4):
@@ -61,7 +61,7 @@ class Chassis(RobotModuleTemplate):
             None
 
         """
-        return self.send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' % (speed_w1, speed_w2, speed_w3, speed_w4))
+        return self._send_cmd('chassis wheel w1 %d w2 %d w3 %d w4 %d' % (speed_w1, speed_w2, speed_w3, speed_w4))
 
     @accepts((float, -5, 5), (float, -5, 5), (int, -1800, 1800), (float, 0, 3.5), (float, 0, 600))
     def shift(self, x=0., y=0., yaw=0, speed_xy=0.5, speed_yaw=90.):
@@ -80,7 +80,7 @@ class Chassis(RobotModuleTemplate):
             None
 
         """
-        return self.send_cmd('chassis move x %f y %f z %d vxy %f vz %f' % (x, y, yaw, speed_xy, speed_yaw))
+        return self._send_cmd('chassis move x %f y %f z %d vxy %f vz %f' % (x, y, yaw, speed_xy, speed_yaw))
 
     def get_all_speed(self):
         """底盘速度信息获取
@@ -103,7 +103,7 @@ class Chassis(RobotModuleTemplate):
 
 
         """
-        response = self.send_query('chassis position ?')
+        response = self._send_query('chassis position ?')
         return self._process_response(response, (float, float, float, int, int, int, int))
 
     def get_speed(self):
@@ -122,7 +122,7 @@ class Chassis(RobotModuleTemplate):
                 ]
 
         """
-        return self.get_all_speed(self)[:3]
+        return self.get_all_speed()[:3]
 
     def get_wheel_speed(self):
         """获取麦轮速度
@@ -141,7 +141,7 @@ class Chassis(RobotModuleTemplate):
                 ]
 
         """
-        return self.get_all_speed(self)[3:]
+        return self.get_all_speed()[3:]
 
     def get_postion(self):
         """底盘位置信息获取
@@ -160,7 +160,7 @@ class Chassis(RobotModuleTemplate):
             ]
 
         """
-        response = self.send_query('chassis position ?')
+        response = self._send_query('chassis position ?')
         return self._process_response(response, float)
 
     def get_attitude(self):
@@ -179,7 +179,7 @@ class Chassis(RobotModuleTemplate):
             ]
 
         """
-        response = self.send_query('chassis attitude ?')
+        response = self._send_query('chassis attitude ?')
         return self._process_response(response, float)
 
     def get_status(self):
@@ -206,7 +206,7 @@ class Chassis(RobotModuleTemplate):
             ]
 
         """
-        response = self.send_query('chassis status ?')
+        response = self._send_query('chassis status ?')
         return self._process_response(response, bool)
 
     def set_push(self, pos_freq=None, atti_freq=None, status_freq=None):
@@ -231,7 +231,7 @@ class Chassis(RobotModuleTemplate):
         """
 
         if pos_freq == atti_freq == status_freq == None:
-            self.log.warn("set_push: got 3 None args." )
+            self._log.warn("set_push: got 3 None args." )
             return False
         else:
             cmd = 'chassis push'
@@ -242,7 +242,7 @@ class Chassis(RobotModuleTemplate):
             elif pos_freq in (1, 5, 10, 20, 30, 50):
                 cmd += ' position on pfreq %d' %pos_freq
             else:
-                self.log.error("set_push: 'pos_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %pos_freq)
+                self._log.error("set_push: 'pos_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %pos_freq)
             
             if atti_freq == None:
                 pass
@@ -251,7 +251,7 @@ class Chassis(RobotModuleTemplate):
             elif atti_freq in (1, 5, 10, 20, 30, 50):
                 cmd += ' attitude on afreq %d' %atti_freq
             else:
-                self.log.error("set_push: 'atti_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %atti_freq)
+                self._log.error("set_push: 'atti_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %atti_freq)
 
             if status_freq == None:
                 pass
@@ -260,6 +260,6 @@ class Chassis(RobotModuleTemplate):
             elif status_freq in (1, 5, 10, 20, 30, 50):
                 cmd += ' status on sfreq %d' %status_freq
             else:
-                self.log.error("set_push: 'status_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %status_freq)
+                self._log.error("set_push: 'status_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %status_freq)
 
-            return self.send_cmd(cmd)
+            return self._send_cmd(cmd)

@@ -31,6 +31,8 @@ class Test():
 
     log = logger.Logger('Tester')
 
+    log.info('Waiting for conn')
+
     cmd_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     cmd_s.bind((HOST, 40923))
     cmd_s.listen()

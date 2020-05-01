@@ -24,7 +24,7 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
   # Example
   rm.basic_ctrl.enter_sdk_mode()
   rm.basic_ctrl.set_robot_mode(2)
-  rm.chassis.set_vel(0.0, 1.0, 10.0)
+  rm.chassis.set_speed(0.0, 1.0, 10.0)
   ```
 
 - 对机器人传来的视频流进行接收和解码
@@ -66,9 +66,9 @@ rm.connect()
 rm.basic_ctrl.enter_sdk_mode()
 sleep(1)
 rm.basic_ctrl.set_robot_mode(2)
-rm.chassis.set_vel(0.0, 1.0, 10.0)
+rm.chassis.set_speed(0.0, 1.0, 10.0)
 sleep(1)
-rm.chassis.set_vel(0.0, 0.0, 0.0)
+rm.chassis.set_speed(0.0, 0.0, 0.0)
 print(rm.chassis.get_postion())
 print(rm.chassis.get_all_speed())
 

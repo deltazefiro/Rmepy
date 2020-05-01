@@ -39,7 +39,7 @@ class Blaster(RobotModuleTemplate):
         
         """
         if not self.__n_repeat == n_repeat:
-            self.send_cmd('blaster bead %d' %n_repeat)
+            self._send_cmd('blaster bead %d' %n_repeat)
             self.__n_repeat = n_repeat
-        return self.send_cmd('blaster fire')
+        return self._send_cmd('blaster fire')
         

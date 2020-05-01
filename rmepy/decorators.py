@@ -12,10 +12,7 @@ def retry(n_retries=3, retry_interval=1):
         @functools.wraps(func)
         def new_func(*args, **kwargs):
 
-            if func.__code__.co_varnames[0] == 'self' and type(args[0].log) == logger.Logger:
-                log = args[0].log
-            else:
-                log = logger.Logger('Retry')
+            log = __get_logger(args, 'Retry')
 
             retry = 0
             while retry < n_retries:
@@ -113,25 +110,19 @@ def accepts(*expc_args, **expc_kwargs):
      """
     def decorate(func):
 
-        func_name = func.__name__
-        if func.__code__.co_varnames[0] == 'self':
-            is_func_in_class = True
-        else:
-            is_func_in_class = False
-
-        sig = signature(func)
-        if is_func_in_class:
-            bound_expc = sig.bind_partial(None, *expc_args, **expc_kwargs).arguments
-        else:
-            bound_expc = sig.bind_partial(*expc_args, **expc_kwargs).arguments
-
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
 
-            if is_func_in_class and type(args[0].log) == logger.Logger:
-                log = args[0].log
+            sig = signature(func)
+            log = __get_logger(args, 'Acceptable check')
+            func_name = func.__name__
+
+            if func.__code__.co_varnames[0] == 'self':
+                is_func_in_class = True
+                bound_expc = sig.bind_partial(None, *expc_args, **expc_kwargs).arguments
             else:
-                log = logger.Logger('Acceptable check')
+                is_func_in_class = False
+                bound_expc = sig.bind_partial(*expc_args, **expc_kwargs).arguments
 
             bound_values = sig.bind(*args, **kwargs).arguments
             
@@ -141,13 +132,13 @@ def accepts(*expc_args, **expc_kwargs):
                     expectation = bound_expc[key]
 
                     if type(expectation) == type:
-                        bound_values[key] = _type_transform(value, expectation)
+                        bound_values[key] = __type_transform(value, expectation)
                         if bound_values[key] == None:
                             log.error("%s: Arguments '%s' expects %s, but got %r" % (
                                 func_name, key, expectation, value))
 
                     else:
-                        bound_values[key] = _type_transform(value, expectation[0])
+                        bound_values[key] = __type_transform(value, expectation[0])
                         if bound_values[key] == None or not expectation[1] <= value <= expectation[2]:
                             log.error("%s: Arguments '%s' expects %s from %s to %s, but got %r" % (
                                 func_name, key, expectation[0], expectation[1], expectation[2], value))
@@ -156,7 +147,7 @@ def accepts(*expc_args, **expc_kwargs):
         return wrapper
     return decorate
 
-def _type_transform(value, expc_type):
+def __type_transform(value, expc_type):
     if expc_type == bool and type(value) == int:
         return int(value) # True/False -> 1/0
     if isinstance(value, expc_type):
@@ -167,3 +158,18 @@ def _type_transform(value, expc_type):
         return str(value)
     else:
         return None
+
+def __get_logger(args, alternative_name):
+    try:
+        if type(args[0].log) == logger.Logger:
+            return args[0].log
+    except Exception:
+        pass
+
+    try:
+        if type(args[0]._log) == logger.Logger:
+            return args[0]._log
+    except Exception:
+        pass
+
+    return logger.Logger(alternative_name)

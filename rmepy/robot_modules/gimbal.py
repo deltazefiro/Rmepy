@@ -23,7 +23,7 @@ class Gimbal(RobotModuleTemplate):
             None
         
         """
-        return self.send_cmd('gimbal speed p %s y %s' %(speed_pitch, speed_yaw))
+        return self._send_cmd('gimbal speed p %s y %s' %(speed_pitch, speed_yaw))
     
     @accepts((float, -55, 55), (float, -55, 55), (float, 0, 540), (float, 0, 540))
     def shift(self, pitch=0., yaw=0., speed_pitch=30., speed_yaw=30.):
@@ -41,7 +41,7 @@ class Gimbal(RobotModuleTemplate):
             None
         
         """
-        return self.send_cmd('gimbal move p %s y %s vp %s vy %s' %(pitch, yaw, speed_pitch, speed_yaw))
+        return self._send_cmd('gimbal move p %s y %s vp %s vy %s' %(pitch, yaw, speed_pitch, speed_yaw))
     
     @accepts((int, -25, 30), (int, -250, 250), (int, 0, 540), (int, 0, 540))
     def move_to(self, pitch, yaw, speed_pitch, speed_yaw):
@@ -59,7 +59,7 @@ class Gimbal(RobotModuleTemplate):
             None
         
         """
-        return self.send_cmd('gimbal moveto p %s y %s vp %s vy %s' %(pitch, yaw, speed_pitch, speed_yaw))
+        return self._send_cmd('gimbal moveto p %s y %s vp %s vy %s' %(pitch, yaw, speed_pitch, speed_yaw))
     
     def suspend(self):
         """云台休眠控制
@@ -73,7 +73,7 @@ class Gimbal(RobotModuleTemplate):
             None
         
         """
-        return self.send_cmd('gimbal suspend')
+        return self._send_cmd('gimbal suspend')
 
     def resume(self):
         """云台恢复控制
@@ -87,7 +87,7 @@ class Gimbal(RobotModuleTemplate):
             None
         
         """
-        return self.send_cmd('gimbal resume')
+        return self._send_cmd('gimbal resume')
 
     def recenter(self):
         """云台回中控制
@@ -101,7 +101,7 @@ class Gimbal(RobotModuleTemplate):
             None
         
         """
-        return self.send_cmd('gimbal recenter')
+        return self._send_cmd('gimbal recenter')
 
     def get_attitude(self):
         """云台姿态获取
@@ -118,7 +118,7 @@ class Gimbal(RobotModuleTemplate):
             ]
         
         """
-        response = self.send_query('gimbal attitude ?')
+        response = self._send_query('gimbal attitude ?')
         return self._process_response(response, int)
     
     def set_push(self, atti_freq):
@@ -148,6 +148,6 @@ class Gimbal(RobotModuleTemplate):
         elif atti_freq in (1, 5, 10, 20, 30, 50):
             cmd += ' attitude on afreq %d' %atti_freq
         else:
-            self.log.error("set_push: 'atti_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %atti_freq)
+            self._log.error("set_push: 'atti_freq' should be an integer in (0, 1, 5, 10, 20, 30, 50), but got %r" %atti_freq)
 
-        return self.send_cmd(cmd)
+        return self._send_cmd(cmd)

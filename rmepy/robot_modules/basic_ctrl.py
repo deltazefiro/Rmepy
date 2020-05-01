@@ -17,7 +17,7 @@ class BasicCtrl(RobotModuleTemplate):
             None
 
         """
-        return self.send_cmd('commend')
+        return self._send_cmd('commend')
 
     def quit_cmd_mode(self):
         """退出 SDK 模式
@@ -32,7 +32,7 @@ class BasicCtrl(RobotModuleTemplate):
             None
 
         """
-        return self.send_cmd('quit')
+        return self._send_cmd('quit')
 
     @accepts((int, 0, 2))
     def set_robot_mode(self, mode):
@@ -50,10 +50,7 @@ class BasicCtrl(RobotModuleTemplate):
 
         """
         mode_enum = ('chassis_lead', 'gimbal_lead', 'free')
-        # if mode not in (0, 1, 2):
-        #     self.log.error(
-        #         "Set_chassis_following_mode: 'mode' must be an integer from 0 to 2")
-        return self.send_cmd('robot mode ' + mode_enum[mode])
+        return self._send_cmd('robot mode ' + mode_enum[mode])
 
     def get_robot_mode(self):
         """获取机器人运动模式
@@ -71,7 +68,7 @@ class BasicCtrl(RobotModuleTemplate):
 
         """
         mode_enum = ('chassis_lead', 'gimbal_lead', 'free')
-        return mode_enum.index(self.send_cmd('robot mode ?'))
+        return mode_enum.index(self._send_cmd('robot mode ?'))
 
     def video_stream_on(self):
         """开启视频流推送
@@ -86,7 +83,7 @@ class BasicCtrl(RobotModuleTemplate):
             None
 
         """
-        return self.send_cmd('stream on')
+        return self._send_cmd('stream on')
 
     def video_stream_off(self):
         """关闭视频流推送
@@ -101,4 +98,4 @@ class BasicCtrl(RobotModuleTemplate):
             None
 
         """
-        return self.send_cmd('stream off')
+        return self._send_cmd('stream off')
