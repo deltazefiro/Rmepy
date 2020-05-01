@@ -131,3 +131,8 @@ dmypy.json
 # Vscode workspace config
 *.code-workspace
 .vscode/
+
+# Test files
+test.py
+tester.py
+temp.py
