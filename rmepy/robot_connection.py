@@ -168,7 +168,7 @@ class RobotConnection(object):
         """Send a commend which does not require returns.
 
         向s1发送一个不需要返回值的命令
-        即若执行成功s1只返回'OK'的命令，如 'connect' 命令
+        即若执行成功s1只返回'ok'的命令，如 'connect' 命令
 
         Args:
             cmd: (str) 命令
@@ -179,8 +179,8 @@ class RobotConnection(object):
         """
         succ, response = self.send_msg(cmd)
         if succ:
-            if response == 'OK':
-                self.log.info("'%s' recevied 'OK'." % cmd)
+            if response == 'ok':
+                self.log.info("'%s' recevied 'ok'." % cmd)
                 return True
             elif response == '':
                 self.log.warn("Got null response of '%s'." % cmd)
