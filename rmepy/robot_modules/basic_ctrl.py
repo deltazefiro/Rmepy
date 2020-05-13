@@ -17,7 +17,7 @@ class BasicCtrl(RobotModuleTemplate):
             None
 
         """
-        return self._send_cmd('commend')
+        return self._send_cmd('command')
 
     def quit_cmd_mode(self):
         """退出 SDK 模式
