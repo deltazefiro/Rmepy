@@ -8,7 +8,7 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
 
 本项目仍在开发中，代码尚不完整
 
-且由于疫情等原因，并未经过实际测试
+~~且由于疫情等原因，并未经过实际测试~~
 
 若对您的机器人造成损害，恕不负责
 
@@ -47,13 +47,29 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
   print(rm.gimbal.pitch, rm.gimbal.yaw)
   ```
 
-  
+
+
+### Requirements:
+
+- 控制端
+  - Python3 (测试使用python3.6&3.8)
+  - opencv-python
+  - matplotlib
+  - numpy
+  - pillow (PIL)
+  - [h264decoder](https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream/decoder)
+
+- 机器人
+  - EP版本  v01.00.00.00
+  - 明文 SDK 版本 v00.00.00.32
+
+
 
 ### Usage:
 
 1. git clone git@github.com:233a344a455/Rmepy.git 克隆本项目代码
-2. 安装依赖：opencv-python, plt, numpy
-3. 编译官方提供的 [h264decoder](https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream/decoder)，将编译得到的两个.so文件放入 rmepy/decoders
+2. 安装上述依赖
+3. 编译官方提供的 [h264decoder](https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream/decoder)，将编译得到的两个.so文件放入 rmepy/decoders/
 4. 在 clone 的位置下创建 脚本文件，可用以下代码测试
 
 
@@ -61,8 +77,10 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
 import rmepy
 from time import sleep
 
-rm = rmepy.Robot(ip='127.0.0.1')
+rm = rmepy.Robot/
+sleep(0.3)
 rm.connect()
+sleep(0.3)
 rm.basic_ctrl.enter_sdk_mode()
 sleep(1)
 rm.basic_ctrl.set_robot_mode(2)

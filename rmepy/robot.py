@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 # coding=utf-8
 
-import queue
+import time
 
 from . import robot_modules
 from .logger import Logger
@@ -27,3 +26,10 @@ class Robot(object):
         self.push = RobotMsgPush(self)
 
         self.log = Logger('RMEP(main)')
+    
+    def start(self):
+        time.sleep(0.1)
+        self.connect()
+        time.sleep(0.1)
+        self.basic_ctrl.enter_sdk_mode()
+        time.sleep(0.1)

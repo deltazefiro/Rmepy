@@ -91,14 +91,14 @@ class RobotVideoStream(object):
         try:
             return self.display_buffer[0]
         except IndexError:
-            self.log.warn("Fail to get last frame: display buffer empty.")
+            self.log.debuginfo("Fail to get last frame: display buffer empty.")
             return None
 
     def get_frame(self):
         try:
             return self.display_buffer.pop()
         except IndexError:
-            self.log.warn("Fail to get frame: display buffer empty.")
+            self.log.debuginfo("Fail to get frame: display buffer empty.")
 
     @property
     def last_frame(self):
