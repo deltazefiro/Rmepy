@@ -29,14 +29,16 @@ class RobotVideoStream(object):
         self.display_running = False
 
         self.video_decoder = libh264decoder.H264Decoder()
-        libh264decoder.disable_logging()
         self.display_buffer = queue.deque(maxlen=display_buffer_size)
         self._decoder_thread = threading.Thread(target=self._decoder_thread_task)
         self._display_thread = threading.Thread(target=self._display_thread_task)
 
+        libh264decoder.disable_logging()
+
     def start(self):
         self.robot.basic_ctrl.video_stream_on()
         self.robot.connection.start_video_recv()
+        time.sleep(1)   # 缓冲
         self._decoder_thread.start()
         self.log.info("VideoStream thread started.")
 
@@ -79,7 +81,7 @@ class RobotVideoStream(object):
         self.display_running = True
         while self.display_running and threading.main_thread().is_alive():
             frame = self.get_frame()
-            if frame:
+            if frame is not None:
                 image = PImage.fromarray(frame)
                 img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
                 cv2.imshow("Liveview", img)

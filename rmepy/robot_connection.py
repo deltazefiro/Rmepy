@@ -150,7 +150,7 @@ class RobotConnection(object):
             return False, None
 
         try:
-            self.ctrl_socket.sendall(msg.encode('utf-8'))
+            self.ctrl_socket.sendall((msg + ';').encode('utf-8'))
         except socket.error as e:
             self.log.warn("Error at sending '%s': %s" % (msg, e))
             return False, None
@@ -161,7 +161,7 @@ class RobotConnection(object):
             self.log.error("Error at receving the response of '%s': %s" % (msg, e))
             return False, None
         
-        return True, recv.decode('utf-8')
+        return True, recv.decode('utf-8').strip(' ;')
 
     @retry(n_retries=3)
     def send_cmd(self, cmd):

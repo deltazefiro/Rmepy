@@ -1,14 +1,13 @@
 import traceback
 
-# 是否输出 debuginfo 信息
-DEBUG = True
-
 class Logger():
     def __init__(self, name):
         if name.__class__.__name__ == 'str':
             self.name = name
         else:
             self.name = name.__class__.__name__
+
+        self.level = 'DEBUG'
 
     def info(self, msg):
         """Print infos.
@@ -19,7 +18,8 @@ class Logger():
         Returns:
             None
         """
-        print("\033[0;36m" + "[Info]%s: %s" % (self.name, msg) + "\033[0m")
+        if self._log_level <= 1:
+            print("\033[0;36m" + "[Info]%s: %s" % (self.name, msg) + "\033[0m")
 
     def warn(self, msg):
         """Print warnings.
@@ -30,7 +30,8 @@ class Logger():
         Returns:
             None
         """
-        print("\033[33m" + "[Warning]%s: %s" % (self.name, msg) + "\033[0m")
+        if self._log_level <= 2:
+            print("\033[33m" + "[Warning]%s: %s" % (self.name, msg) + "\033[0m")
 
     def error(self, msg):
         """Print errors.
@@ -63,7 +64,7 @@ class Logger():
         Returns:
             None
         """
-        if DEBUG:
+        if self._log_level == 0:
             print("\033[2m" + "[Debug]%s: %s" % (self.name, msg) + "\033[0m")
 
     def debug(self, msg):
@@ -77,10 +78,22 @@ class Logger():
         """
         print("\033[7m" + "[Debug]%s: %s" % (self.name, msg) + "\033[0m")
 
+    @property
+    def level(self):
+        return ('DEBUG', 'INFO', 'WARNING', 'ERROR')[self._log_level]
 
+    @level.setter
+    def level(self, level):
+        try:
+            level = ('DEBUG', 'INFO', 'WARNING', 'ERROR').index(level)
+        except ValueError:
+            print("\033[33m" + "[Warning]Logger: Invalid log level %r." %level + "\033[0m")
+        else:
+            self._log_level = level
 
 if  __name__ == '__main__':
     log = Logger('test')
+    log.level = 'WARNING'
 
     log.info('test')
     log.warn('test')
