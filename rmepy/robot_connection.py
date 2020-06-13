@@ -31,7 +31,7 @@ class RobotConnection(object):
         self.ip_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         try:
-            self.push_socket.bind((robot_ip, RobotConnection.PUSH_PORT))
+            self.push_socket.bind(('', RobotConnection.PUSH_PORT))
             self.ip_socket.bind(('', RobotConnection.IP_PORT))
         except OSError as e:
             self.log.error('Error when binding ports: %s' %e)

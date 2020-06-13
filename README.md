@@ -4,16 +4,6 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
 
 
 
-### Caution:
-
-本项目仍在开发中，代码尚不完整
-
-~~且由于疫情等原因，并未经过实际测试~~
-
-若对您的机器人造成损害，恕不负责
-
-
-
 ### Features:
 
 该项目目前提供以下功能
@@ -69,8 +59,7 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
 
 1. git clone git@github.com:233a344a455/Rmepy.git 克隆本项目代码
 2. 安装上述依赖
-3. 编译官方提供的 [h264decoder](https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream/decoder)，将编译得到的两个.so文件放入 rmepy/decoders/
-4. 在 clone 的位置下创建 脚本文件，可用以下代码测试
+3. 在 clone 的位置下创建 脚本文件，可用以下代码测试
 
 
 ```python
