@@ -1,10 +1,11 @@
 from .__module_template import  RobotModuleTemplate
-from ..decorators import accepts
+from ..decorators import accepts, retry
 
 class BasicCtrl(RobotModuleTemplate):
     def __init__(self, robot):
         super().__init__(robot)
 
+    @retry(n_retries=1e5)
     def enter_sdk_mode(self):
         """控制机器人进入 SDK 模式
 
@@ -17,7 +18,13 @@ class BasicCtrl(RobotModuleTemplate):
             None
 
         """
-        return self._send_cmd('command')
+        resp = self._send_msg('command')[1]
+        if resp == 'ok':
+            self._log.info('Enter sdk mode successfully.')
+            return True
+        else:
+            self._log.warn('Failed to enter sdk mode: %s' %resp)
+            return False
 
     def quit_cmd_mode(self):
         """退出 SDK 模式

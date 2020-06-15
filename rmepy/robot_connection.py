@@ -150,7 +150,7 @@ class RobotConnection(object):
             return False, None
 
         try:
-            self.ctrl_socket.sendall((msg + ';').encode('utf-8'))
+            self.ctrl_socket.sendall(msg.encode('utf-8'))
         except socket.error as e:
             self.log.warn("Error at sending '%s': %s" % (msg, e))
             return False, None
@@ -177,7 +177,7 @@ class RobotConnection(object):
             (succ: (bool) 是否成功，被修饰器使用)
             None
         """
-        succ, response = self.send_msg(cmd)
+        succ, response = self.send_msg(cmd + ';')
         if succ:
             if response == 'ok':
                 self.log.info("'%s' recevied 'ok'." % cmd)
@@ -202,7 +202,7 @@ class RobotConnection(object):
             (succ: (bool) 是否成功，被修饰器使用)
             response: (str) 来自s1的返回值
         """
-        succ, response = self.send_msg(cmd)
+        succ, response = self.send_msg(cmd + ';')
 
         if succ:
             if response == '':
