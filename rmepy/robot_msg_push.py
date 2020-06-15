@@ -53,7 +53,6 @@ class RobotMsgPush(object):
         while self.running and threading.main_thread().is_alive():
             msg = self.get_push_data()
             if msg:
-                self.log.debug(msg)
                 module_name, _, attr, *values = msg.split()
                 self._process_msg_push(module_name, attr, values)
         

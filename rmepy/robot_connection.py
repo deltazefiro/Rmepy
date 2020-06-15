@@ -177,7 +177,8 @@ class RobotConnection(object):
             (succ: (bool) 是否成功，被修饰器使用)
             None
         """
-        succ, response = self.send_msg(cmd + ';')
+        # succ, response = self.send_msg(cmd + ';')
+        succ, response = self.send_msg(cmd)
         if succ:
             if response == 'ok':
                 self.log.info("'%s' recevied 'ok'." % cmd)
@@ -202,7 +203,8 @@ class RobotConnection(object):
             (succ: (bool) 是否成功，被修饰器使用)
             response: (str) 来自s1的返回值
         """
-        succ, response = self.send_msg(cmd + ';')
+        succ, response = self.send_msg(cmd)
+        # succ, response = self.send_msg(cmd + ';')
 
         if succ:
             if response == '':
@@ -242,7 +244,7 @@ class RobotConnection(object):
         """
         data =  self._get_received_data(self.push_socket, latest_data)
         if data:
-            return data.decode('utf-8')
+            return data.decode('utf-8').strip(' ;')
         else:
             return None
 
@@ -255,7 +257,7 @@ class RobotConnection(object):
         """
         data = self._get_received_data(self.event_socket, latest_data)
         if data:
-            return data.decode('utf-8')
+            return data.decode('utf-8').strip(' ;')
         else:
             return None
 

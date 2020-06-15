@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
         # Draw image
         temp = r.video.get_frame()
-        if temp:
+        if temp is not None:
             frame = temp
         pygame.surfarray.blit_array(display, frame)
         pygame.display.flip()
