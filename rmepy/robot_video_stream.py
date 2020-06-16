@@ -22,14 +22,14 @@ from .decorators import retry
 
 
 class RobotVideoStream(object):
-    def __init__(self, robot, display_buffer_size=5):
+    def __init__(self, robot, display_buffer_size=3):
         self.robot = robot
         self.log = logger.Logger(self)
         self.running = False
         self.display_running = False
 
         self.video_decoder = libh264decoder.H264Decoder()
-        self.display_buffer = queue.deque(maxlen=display_buffer_size)
+        self.display_buffer = queue.Queue(maxsize=display_buffer_size)
         self._decoder_thread = threading.Thread(target=self._decoder_thread_task)
         self._display_thread = threading.Thread(target=self._display_thread_task)
 
@@ -57,7 +57,11 @@ class RobotVideoStream(object):
                 if len(buff) != 1460:
                     frames = self._h264_decode(package_data)
                     if frames:
-                        self.display_buffer.extendleft(frames)
+                        for f in frames:
+                            try:
+                                self.display_buffer.put_nowait(f)
+                            except Exception:
+                                self.log.debuginfo('display buffer full.')
                     package_data = b''
 
         self.log.debuginfo('Shutted down VideoDecoder thread successfully.')
@@ -99,8 +103,8 @@ class RobotVideoStream(object):
 
     def get_frame(self):
         try:
-            return self.display_buffer.pop()
-        except IndexError:
+            return self.display_buffer.get_nowait()
+        except Exception:
             self.log.debuginfo("Fail to get frame: display buffer empty.")
 
     @property

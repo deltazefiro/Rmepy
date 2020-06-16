@@ -38,10 +38,10 @@ class RobotConnection(object):
 
         self.socket_list = [self.push_socket, self.event_socket]
         self.socket_msg_queue = {
-            self.video_socket: queue.deque(maxlen=32),
-            self.audio_socket: queue.deque(maxlen=32),
-            self.push_socket: queue.deque(maxlen=16),
-            self.event_socket: queue.deque(maxlen=16)
+            self.video_socket: queue.Queue(maxsize=32),
+            self.audio_socket: queue.Queue(maxsize=32),
+            self.push_socket: queue.Queue(maxsize=16),
+            self.event_socket: queue.Queue(maxsize=16)
         }
         self.socket_recv_thread = threading.Thread(target=self._socket_recv_task)
 
@@ -270,7 +270,7 @@ class RobotConnection(object):
         try:
             if latest_data:
                 return self.socket_msg_queue[socket_obj][-1]
-            return self.socket_msg_queue[socket_obj].pop()
+            return self.socket_msg_queue[socket_obj].get_nowait()
         except Exception as e:
             # self.log.debuginfo("Msg queue is empty.")
             return None
@@ -281,7 +281,10 @@ class RobotConnection(object):
 
             for s in rlist:
                 msg, addr = s.recvfrom(4096)
-                self.socket_msg_queue[s].appendleft(msg)
+                try:
+                    self.socket_msg_queue[s].put_nowait(msg)
+                except Exception:
+                    self.log.debuginfo("Queue is full.")
         
         self.log.debuginfo('Shutted down SocketRecv thread successfully.')
         self.running = False

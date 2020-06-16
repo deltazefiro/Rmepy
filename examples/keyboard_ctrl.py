@@ -16,39 +16,41 @@ import threading
 sys.path.append(os.path.split(os.path.abspath(os.path.dirname(__file__)))[0])
 import rmepy
 
-MOVE_SPEED = 0.5
-ROTATE_SPEED = 60
-CMD_SEND_FREQ = 5
+MOVE_SPEED = 1
+ROTATE_SPEED = 180
+CMD_SEND_FREQ = 20
 
 running = True
 r = rmepy.Robot()
 r.start()
 r.video.start()
 time.sleep(0.1)
+r.video.log.level = 'INFO'
+r.connection.log.level = 'WARNING'
 
 speed = (0, 0, 0)
 
 def key_handler(k):
     global running, r, speed
-    speed = (0, 0, 0)
+    speed = [0, 0, 0]
     if k[pygame.K_w]:
         # forward
-        speed = (MOVE_SPEED, 0, 0)
+        speed[0] = MOVE_SPEED
     if k[pygame.K_s]:
         # back
-        speed = (-MOVE_SPEED, 0, 0)
+        speed[0] = -MOVE_SPEED
     if k[pygame.K_d]:
         # right
-        speed = (0, -MOVE_SPEED, 0)
+        speed[1] = -MOVE_SPEED
     if k[pygame.K_a]:
         # left
-        speed = (0, MOVE_SPEED, 0)
+        speed[1] = MOVE_SPEED
     if k[pygame.K_q]:
         # counter clockwise rotate
-        speed = (0, 0, ROTATE_SPEED)
+        speed[2] = ROTATE_SPEED
     if k[pygame.K_e]:
         # clockwise rotate
-        speed = (0, 0, -ROTATE_SPEED)
+        speed[2] = -ROTATE_SPEED
 
 
 def ctrl_task():
