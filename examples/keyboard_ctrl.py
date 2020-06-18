@@ -17,9 +17,8 @@ sys.path.append(os.path.split(os.path.abspath(os.path.dirname(__file__)))[0])
 import rmepy
 
 MOVE_SPEED = 1
-ROTATE_SPEED = 180
-CMD_SEND_FREQ = 20
-
+ROTATE_SPEED = 600
+CMD_SEND_FREQ = 60
 running = True
 r = rmepy.Robot()
 r.start()
@@ -31,7 +30,7 @@ r.connection.log.level = 'WARNING'
 speed = (0, 0, 0)
 
 def key_handler(k):
-    global running, r, speed
+    global running, r, speed, l_pos, z
     speed = [0, 0, 0]
     if k[pygame.K_w]:
         # forward
@@ -45,12 +44,11 @@ def key_handler(k):
     if k[pygame.K_a]:
         # left
         speed[1] = MOVE_SPEED
-    if k[pygame.K_q]:
-        # counter clockwise rotate
-        speed[2] = ROTATE_SPEED
-    if k[pygame.K_e]:
-        # clockwise rotate
-        speed[2] = -ROTATE_SPEED
+    if k[pygame.K_ESCAPE]:
+        # exit
+        running = False
+        
+    speed[2] = (-pygame.mouse.get_rel()[0]) / 540 * ROTATE_SPEED
 
 
 def ctrl_task():
@@ -68,6 +66,11 @@ if __name__ == "__main__":
     display = pygame.display.set_mode((1080, 720))
     clock = pygame.time.Clock()
 
+    pygame.event.set_grab(True)
+    pygame.mouse.set_visible(False)
+
+    update_frame = True
+
     while running:
 
         for event in pygame.event.get():
@@ -78,13 +81,15 @@ if __name__ == "__main__":
         key_handler(keys)
 
         # Draw image
-        temp = r.video.get_frame()
-        if temp is not None:
-            frame = np.rot90(temp, 1)
-        surf = pygame.surfarray.make_surface(frame)
-        display.blit(surf, (0, 0))
-        pygame.display.flip()
+        if update_frame:
+            temp = r.video.get_frame()
+            if temp is not None:
+                frame = np.rot90(temp, 1)
+            surf = pygame.surfarray.make_surface(frame)
+            display.blit(surf, (0, 0))
+            pygame.display.flip()
+        update_frame = not update_frame
 
-        clock.tick(30)
+        clock.tick(60)
 
     pygame.quit()
