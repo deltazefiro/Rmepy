@@ -16,9 +16,10 @@ import threading
 sys.path.append(os.path.split(os.path.abspath(os.path.dirname(__file__)))[0])
 import rmepy
 
-MOVE_SPEED = 1
+MOVE_SPEED = 1.5
 ROTATE_SPEED = 600
 CMD_SEND_FREQ = 60
+THRESHOLD = 50
 running = True
 r = rmepy.Robot()
 r.start()
@@ -48,7 +49,7 @@ def key_handler(k):
         # exit
         running = False
         
-    speed[2] = (-pygame.mouse.get_rel()[0]) / 540 * ROTATE_SPEED
+    speed[2] = min(max(-pygame.mouse.get_rel()[0], -THRESHOLD), THRESHOLD) / THRESHOLD * ROTATE_SPEED
 
 
 def ctrl_task():

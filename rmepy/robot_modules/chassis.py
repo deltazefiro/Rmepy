@@ -103,7 +103,7 @@ class Chassis(RobotModuleTemplate):
 
 
         """
-        response = self._send_query('chassis position ?')
+        response = self._send_query('chassis speed ?')
         return self._process_response(response, (float, float, float, int, int, int, int))
 
     def get_speed(self):
