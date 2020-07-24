@@ -33,14 +33,14 @@ class RobotConnection(object):
         self.push_socket.bind(('', RobotConnection.PUSH_PORT))
         self.ip_socket.bind(('', RobotConnection.IP_PORT))
 
-        self.cmd_socket_list = [self.push_socket, self.event_socket]
-        self.cmd_socket_msg_queue = {
+        self.recv_socket_list = [self.push_socket, self.event_socket]
+        self.socket_msg_queue = {
             self.video_socket: queue.Queue(32),
             self.audio_socket: queue.Queue(32),
             self.push_socket: queue.Queue(16),
             self.event_socket: queue.Queue(16)
         }
-        self.cmd_socket_recv_thread = threading.Thread(target=self.__socket_recv_task)
+        self.socket_recv_thread = threading.Thread(target=self.__socket_recv_task)
 
         self.is_shutdown = True
 
@@ -65,7 +65,7 @@ class RobotConnection(object):
         try:
             msg, addr = self.ip_socket.recvfrom(1024)
         except Exception as e:
-            print('Get robot ip failed, please check the robot networking-mode and connection !')
+            self.log.error('Get robot ip failed, please check the robot networking-mode and connection !')
         else:
             msg = msg.decode('utf-8')
             msg = msg[msg.find('robot ip ') + len('robot ip ') : ]
@@ -85,12 +85,12 @@ class RobotConnection(object):
             self.ctrl_socket.connect((self.robot_ip, RobotConnection.CTRL_PORT))
             self.event_socket.connect((self.robot_ip, RobotConnection.EVENT_PORT))
         except Exception as e:
-            print('Connection failed, the reason is %s'%e)
+            self.log.error('Connection failed, the reason is %s'%e)
             return False
         else:
             self.is_shutdown = False
-            self.cmd_socket_recv_thread.start() 
-            print('Connection successful')
+            self.socket_recv_thread.start() 
+            self.log.info('Connection successful.')
             return True
 
     def close(self): 
@@ -98,40 +98,42 @@ class RobotConnection(object):
         Close the connection
         """
         self.is_shutdown = True
-        self.cmd_socket_recv_thread.join()
+        self.socket_recv_thread.join()
 
     def start_video_recv(self):
-        assert not self.is_shutdown, 'CONNECTION INVALID'
-        if self.video_socket not in self.cmd_socket_list:
+        if self.is_shutdown:
+            self.log.error("Connection is already shut down.")
+        if self.video_socket not in self.recv_socket_list:
             self.video_socket.settimeout(5)
             try:
                 self.video_socket.connect((self.robot_ip, RobotConnection.VIDEO_PORT))
             except Exception as e:
-                print('Connection failed, the reason is %s'%e)
+                self.log.error('Connection failed, the reason is %s'%e)
                 return False 
-            self.cmd_socket_list.append(self.video_socket)
+            self.recv_socket_list.append(self.video_socket)
         return True
 
     def stop_video_recv(self):
-        if self.video_socket in self.cmd_socket_list:
-            self.cmd_socket_list.remove(self.video_socket)
+        if self.video_socket in self.recv_socket_list:
+            self.recv_socket_list.remove(self.video_socket)
         return True
 
     def start_audio_recv(self):
-        assert not self.is_shutdown, 'CONNECTION INVALID'
-        if self.audio_socket not in self.cmd_socket_list:
+        if self.is_shutdown:
+            self.log.error("Connection is already shut down.")
+        if self.audio_socket not in self.recv_socket_list:
             self.audio_socket.settimeout(5)
             try:
                 self.audio_socket.connect((self.robot_ip, RobotConnection.AUDIO_PORT))
             except Exception as e:
-                print('Connection failed, the reason is %s'%e)
+                self.log.error('Connection failed, the reason is %s'%e)
                 return False
-            self.cmd_socket_list.append(self.audio_socket)
+            self.recv_socket_list.append(self.audio_socket)
         return True
 
     def stop_audio_recv(self):
-        if self.audio_socket in self.cmd_socket_list:
-            self.cmd_socket_list.remove(self.audio_socket)
+        if self.audio_socket in self.recv_socket_list:
+            self.recv_socket_list.remove(self.audio_socket)
         return True
 
     def get_video_data(self, timeout=None, latest_data=False):
@@ -272,29 +274,30 @@ class RobotConnection(object):
         return False, None
         
     def __recv_data(self, socket_obj, timeout, latest_data):
-        assert not self.is_shutdown, 'CONECTION INVALID'
+        if self.is_shutdown:
+            self.log.error("Connection is already shut down.")
         msg = None
         if latest_data:
-            while self.cmd_socket_msg_queue[socket_obj].qsize() > 1:
-                self.cmd_socket_msg_queue[socket_obj].get()
+            while self.socket_msg_queue[socket_obj].qsize() > 1:
+                self.socket_msg_queue[socket_obj].get()
         try:
-            msg = self.cmd_socket_msg_queue[socket_obj].get(timeout=timeout)
+            msg = self.socket_msg_queue[socket_obj].get(timeout=timeout)
         except Exception as e:
             return None
         else:
             return msg
         
     def __socket_recv_task(self):
-        while not self.is_shutdown:
-            rlist, _, _  = select.select(self.cmd_socket_list, [], [], 2)
+        while not self.is_shutdown and threading.main_thread().is_alive():
+            rlist, _, _  = select.select(self.recv_socket_list, [], [], 2)
 
             for s in rlist:
                 msg, addr = s.recvfrom(4096)
-                if self.cmd_socket_msg_queue[s].full():
-                    self.cmd_socket_msg_queue[s].get()
-                self.cmd_socket_msg_queue[s].put(msg)
+                if self.socket_msg_queue[s].full():
+                    self.socket_msg_queue[s].get()
+                self.socket_msg_queue[s].put(msg)
 
-        for s in self.cmd_socket_list:
+        for s in self.recv_socket_list:
             try:
                 s.shutdown(socket.SHUT_RDWR)
             except Exception as e:
