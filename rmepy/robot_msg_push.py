@@ -53,6 +53,7 @@ class RobotMsgPush(object):
         while self.running and threading.main_thread().is_alive():
             msg = self.get_push_data()
             if msg:
+                self.log.debug(msg)
                 for idx, m in enumerate(msg.split(';')):
                     if idx == 0:
                         module_name, _, attr, *values = m.split()

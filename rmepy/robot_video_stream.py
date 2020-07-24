@@ -22,7 +22,7 @@ from .decorators import retry
 
 
 class RobotVideoStream(object):
-    def __init__(self, robot, display_buffer_size=3):
+    def __init__(self, robot, display_buffer_size=10):
         self.robot = robot
         self.log = logger.Logger(self)
         self.running = False
@@ -38,7 +38,7 @@ class RobotVideoStream(object):
     def start(self):
         self.robot.basic_ctrl.video_stream_on()
         self.robot.connection.start_video_recv()
-        time.sleep(1)   # 缓冲
+        # time.sleep(1)   # 缓冲
         self._decoder_thread.start()
         self.log.info("VideoStream thread started.")
 
@@ -59,7 +59,7 @@ class RobotVideoStream(object):
                     if frames:
                         for f in frames:
                             try:
-                                self.display_buffer.put_nowait(f)
+                                self.display_buffer.put(f, timeout=2)
                             except Exception:
                                 self.log.debuginfo('display buffer full.')
                     package_data = b''
@@ -103,7 +103,7 @@ class RobotVideoStream(object):
 
     def get_frame(self):
         try:
-            return self.display_buffer.get_nowait()
+            return self.display_buffer.get(timeout=2)
         except Exception:
             self.log.debuginfo("Fail to get frame: display buffer empty.")
 
