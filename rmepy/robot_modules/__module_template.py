@@ -12,7 +12,7 @@ class RobotModuleTemplate(object):
     def _process_response(self, data, type_list):
         try:
             data = data.split(' ')
-            if type(type_list) == list:
+            if isinstance(type_list, (list, tuple)):
                 data = [f(i) if f != bool else bool(int(i))
                         for i, f in zip(data, type_list)]
             else:

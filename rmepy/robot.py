@@ -28,8 +28,10 @@ class Robot(object):
         self.log = Logger('RMEP(main)')
     
     def start(self):
-        time.sleep(0.1)
+        time.sleep(0.02)
         self.connect()
-        time.sleep(0.1)
+        time.sleep(0.02)
         self.basic_ctrl.enter_sdk_mode()
-        time.sleep(0.1)
+        time.sleep(0.02)
+        self.push.start()
+        time.sleep(0.02)

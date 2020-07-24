@@ -53,8 +53,12 @@ class RobotMsgPush(object):
         while self.running and threading.main_thread().is_alive():
             msg = self.get_push_data()
             if msg:
-                module_name, _, attr, *values = msg.split()
-                self._process_msg_push(module_name, attr, values)
+                for idx, m in enumerate(msg.split(';')):
+                    if idx == 0:
+                        module_name, _, attr, *values = m.split()
+                    else:
+                        attr, *values = m.split()
+                    self._process_msg_push(module_name, attr, values)
         
         self.log.debuginfo('Shutted down RobotMsgPush thread successfully.')
         self.running = False
@@ -74,7 +78,7 @@ class RobotMsgPush(object):
 
         """
         try:
-            if type(type_list) == list:
+            if isinstance(type_list, (list, tuple)):
                 data = [f(i) if f != bool else bool(int(i))for i, f in zip(data, type_list)]
             else:
                 data = [type_list(i) if type_list != bool else bool(int(i)) for i in data]
@@ -102,16 +106,16 @@ class RobotMsgPush(object):
         robot = self.robot
         if module_name == 'chassis':
             if attr == 'position':
-                self._process_type(values, float)
-                (robot.chassis.x, robot.chassis.y, robot.chassis.z) = values
+                values = self._process_type(values, float)
+                (robot.chassis.x, robot.chassis.y) = values
             elif attr == 'attitude':
-                self._process_type(values, float)
+                values = self._process_type(values, float)
                 (robot.chassis.pitch, robot.chassis.roll, robot.chassis.yaw) = values
             elif attr == 'status':
-                self._process_type(values, bool)
+                values = self._process_type(values, bool)
                 (robot.chassis.is_static, robot.chassis.is_uphill, robot.chassis.is_downhill, robot.chassis.is_on_slope, robot.chassis.is_pick_up, robot.chassis.is_slip,
                  robot.chassis.is_impact_x, robot.chassis.is_impact_y, robot.chassis.is_impact_z, robot.chassis.is_roll_over, robot.chassis.is_hill_static) = values
         elif module_name == 'gimbal':
             if attr == 'attitude':
-                self._process_type(values, float)
+                values = self._process_type(values, float)
                 (robot.gimbal.pitch, robot.gimbal.yaw) = values

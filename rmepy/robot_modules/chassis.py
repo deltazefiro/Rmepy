@@ -8,7 +8,6 @@ class Chassis(RobotModuleTemplate):
         # position 底盘当前的位置距离上电时刻位置
         self.x = 0.0  # x 轴位置(m)
         self.y = 0.0  # y 轴位置(m)
-        self.z = 0.0  # 偏航角度(°)
 
         # attitude
         self.pitch = 0.0
