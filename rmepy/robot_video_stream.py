@@ -55,13 +55,11 @@ class RobotVideoStream(object):
             if buff:
                 package_data += buff
                 if len(buff) != 1460:
-                    frames = self._h264_decode(package_data)
-                    if frames:
-                        for f in frames:
-                            try:
-                                self.display_buffer.put(f, timeout=2)
-                            except Exception:
-                                self.log.debuginfo('display buffer full.')
+                    for frame in self._h264_decode(package_data):
+                        try:
+                            self.display_buffer.put(frame, timeout=2)
+                        except Exception:
+                            self.log.debuginfo('display buffer full.')
                     package_data = b''
 
         self.log.debuginfo('Shutted down VideoDecoder thread successfully.')
@@ -84,12 +82,12 @@ class RobotVideoStream(object):
     def _display_thread_task(self):
         self.display_running = True
         while self.display_running and threading.main_thread().is_alive():
-            frame = self.get_frame()
+            frame = self.get_frame(timeout=2)
             if frame is not None:
                 image = PImage.fromarray(frame)
                 img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
                 cv2.imshow("Liveview", img)
-            cv2.waitKey(34) # 30 fps
+            cv2.waitKey(1)
 
         self.log.debuginfo('Shutted down Display thread successfully.')
         self.display_running = False
@@ -101,9 +99,9 @@ class RobotVideoStream(object):
             self.log.debuginfo("Fail to get last frame: display buffer empty.")
             return None
 
-    def get_frame(self):
+    def get_frame(self, timeout=2):
         try:
-            return self.display_buffer.get(timeout=2)
+            return self.display_buffer.get(timeout)
         except Exception:
             self.log.debuginfo("Fail to get frame: display buffer empty.")
 

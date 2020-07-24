@@ -176,7 +176,9 @@ class RobotConnection(object):
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
         """
-        return self.__recv_data(self.push_socket, timeout, latest_data).decode('utf-8').strip(' ;')
+        data = self.__recv_data(self.push_socket, timeout, latest_data)
+        if data:
+            return data.decode('utf-8').strip(' ;')
 
     def get_event_data(self, timeout=None, latest_data=False):
         """
@@ -190,7 +192,9 @@ class RobotConnection(object):
         If optional arg 'latest_data' is set to True, it will return the latest
         data, instead of the data in queue tail.
         """
-        return self.__recv_data(self.event_socket, timeout, latest_data).decode('utf-8').strip(' ;')
+        data = (self.event_socket, timeout, latest_data)
+        if data:
+            return data.decode('utf-8').strip(' ;')
 
 
     def send_msg(self, msg):
