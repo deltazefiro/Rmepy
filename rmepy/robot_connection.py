@@ -288,6 +288,7 @@ class RobotConnection(object):
             return msg
         
     def __socket_recv_task(self):
+        self.log.info("SocketRecv thread started.")
         while not self.is_shutdown and threading.main_thread().is_alive():
             rlist, _, _  = select.select(self.recv_socket_list, [], [], 2)
 
@@ -302,3 +303,5 @@ class RobotConnection(object):
                 s.shutdown(socket.SHUT_RDWR)
             except Exception as e:
                 pass
+
+        self.log.debuginfo('Shutted down SocketRecv thread successfully.')

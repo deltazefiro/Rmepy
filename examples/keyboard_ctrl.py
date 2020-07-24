@@ -25,7 +25,7 @@ r = rmepy.Robot()
 r.start()
 r.video.start()
 time.sleep(0.1)
-r.video.log.level = 'INFO'
+# r.video.log.level = 'INFO'
 r.connection.log.level = 'WARNING'
 
 speed = (0, 0, 0)
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
         # Draw image
         if update_frame:
-            temp = r.video.get_frame()
+            temp = r.video.get_frame(timeout=1)
             if temp is not None:
                 frame = np.rot90(temp, 1)
             surf = pygame.surfarray.make_surface(frame)
@@ -91,6 +91,6 @@ if __name__ == "__main__":
             pygame.display.flip()
         update_frame = not update_frame
 
-        clock.tick(60)
+        clock.tick(65)
 
     pygame.quit()

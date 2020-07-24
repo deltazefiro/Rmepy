@@ -114,6 +114,6 @@ if __name__ == "__main__":
         display.blit(surf, (0, 0))
         pygame.display.flip()
 
-        clock.tick(25)
+        clock.tick(65)
 
     pygame.quit()
