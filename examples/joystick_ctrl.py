@@ -1,3 +1,7 @@
+
+# Control the robot with joystick.
+# Not finished yet.
+
 import os
 import sys
 import threading

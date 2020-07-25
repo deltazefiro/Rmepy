@@ -72,6 +72,7 @@ class RobotConnection(object):
 
         return msg
 
+    @retry(n_retries=5)
     def open(self): 
         """
         Open the connection
@@ -85,7 +86,7 @@ class RobotConnection(object):
             self.ctrl_socket.connect((self.robot_ip, RobotConnection.CTRL_PORT))
             self.event_socket.connect((self.robot_ip, RobotConnection.EVENT_PORT))
         except Exception as e:
-            self.log.error('Connection failed, the reason is %s'%e)
+            self.log.warn('Connection failed, the reason is %s.'%e)
             return False
         else:
             self.is_shutdown = False

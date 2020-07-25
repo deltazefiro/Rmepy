@@ -1,6 +1,6 @@
 # Rmepy
 
-Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原官方在robomaster app中封装的python接口。
+Rmepy 是一个对接DJI RobomasterEP sdk的非官方python3接口，目标是还原官方在robomaster app中封装的python接口。
 
 
 
@@ -12,9 +12,9 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
 
   ```python
   # Example
-  rm.basic_ctrl.enter_sdk_mode()
+  rm.start()
   rm.basic_ctrl.set_robot_mode(2)
-  rm.chassis.set_speed(0.0, 1.0, 10.0)
+  rm.chassis.set_speed(0.0, 0.0, 10.0)
   ```
 
 - 对机器人传来的视频流进行接收和解码
@@ -22,12 +22,9 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
   ```python
   # Example
   rm.video.start()
-  frame = rm.video.get_frame()
-  img = cv2.cvtColor(np.array(PImage.fromarray(frame)), cv2.COLOR_RGB2BGR)
-  cv2.imshow("img", img)
   rm.video.display()
   ```
-
+  
 - 对机器人的推送信息进行处理，能在程序中调用
 
   ```python
@@ -44,7 +41,6 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
 - 控制端
   - Python3 (测试使用python3.6&3.8)
   - opencv-python
-  - matplotlib
   - numpy
   - pillow (PIL)
   - [h264decoder](https://github.com/dji-sdk/RoboMaster-SDK/tree/master/sample_code/RoboMasterEP/stream/decoder)
@@ -66,28 +62,23 @@ Rmepy 是一个对接RobomasterEP sdk的非官方python3接口，目标是还原
 import rmepy
 from time import sleep
 
-rm = rmepy.Robot/
-sleep(0.3)
-rm.connect()
-sleep(0.3)
-rm.basic_ctrl.enter_sdk_mode()
-sleep(1)
-rm.basic_ctrl.set_robot_mode(2)
-rm.chassis.set_speed(0.0, 1.0, 10.0)
-sleep(1)
-rm.chassis.set_speed(0.0, 0.0, 0.0)
-print(rm.chassis.get_postion())
-print(rm.chassis.get_all_speed())
+r = rmepy.Robot()
+r.start()
 
-rm.push.start()
-rm.gimbal.set_push(atti_freq=5)
-sleep(0.5)
-print(rm.gimbal.pitch, rm.gimbal.yaw)
+r.video.log.level = 'WARNING'
+r.video.log.level = 'INFO'
 
-rm.video.start()
+r.video.start()
+r.video.display()
+
+r.basic_ctrl.set_robot_mode(2)
+r.chassis.set_push(1, 1, 1)
+r.chassis.set_speed(0.0, 1.0, 10.0)
+print(r.chassis.get_postion())
 sleep(1)
-rm.video.display()
-sleep(10)
+r.chassis.set_speed(0.0, 0.0, 0.0)
+print(r.chassis.get_postion())
+sleep(1e5)
 ```
 
 目前支持的其他命令的详细内容
@@ -102,13 +93,9 @@ sleep(10)
 
 ```
 rmepy
-├── decoders	# 官方提供的解码器，需自己编译
-│   ├── __init__.py
-│   ├── libh264decoder.so
-│   └── opus_decoder.so
 ├── decorators.py	# 装饰器，包括 retry, accepts 等
 ├── __init__.py
-├── logger.py	# 提供log服务
+├── logger.py	# 提供日志输出服务
 ├── robot_connection.py		# 提供与机器人的通讯服务
 ├── robot_modules	# 封装的sdk命令
 │   ├── basic_ctrl.py	# 基础操控
@@ -150,6 +137,6 @@ rmepy.Robot
 - [ ]  封装所有基本的控制命令
 - [x]  接收s1的视频流
 - [x]  对状态推送信息处理进行测试
-- [ ] 对视频流接收进行测试
+- [x] 对视频流接收进行测试
 - [ ] 增加 advanced 模块，进行图像的高级处理（巡线，yolov3的物体识别等）
 

@@ -38,7 +38,6 @@ class RobotVideoStream(object):
     def start(self):
         self.robot.basic_ctrl.video_stream_on()
         self.robot.connection.start_video_recv()
-        # time.sleep(1)   # 缓冲
         self._decoder_thread.start()
         self.log.info("VideoStream thread started.")
 
